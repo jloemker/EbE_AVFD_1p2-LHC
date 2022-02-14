@@ -2,9 +2,9 @@
 EbEAVFD_Parameters = {
 	'Projectile/Target'			:	'Pb',
 	'Beam Energy'               :   '5020',
-	'Job Number'				:	'10',
+	'Job Number'				:	'1000',
 	'Hydro Events Per Job'		:	'1',
-	'Hadronization Events'		: 	'1',
+	'Hadronization Events'		: 	'50',
 	'Centrality'				:   '20-30%',
 	'LCC Ratio'					:	'0.0%'	,
 	'Axial Charge Ratio' 		:	'0.0'	,
