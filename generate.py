@@ -8,7 +8,7 @@ EbEAVFD_Parameters = {
     'Centrality'                :   '20-30%',
     'LCC Ratio'                 :   '0%'   ,
     'Axial Charge Ratio'        :   '0.0'   ,
-    'Bfield Life Time'          :   '0.0'   ,
+    'Bfield Life Time'          :   '0.8'   ,
 }
 from os import path, getcwd, remove, makedirs
 from shutil import move, copy, rmtree, copytree

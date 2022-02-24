@@ -6,7 +6,7 @@ echo ${TMPDIR}
 export INPUT_FILES_DIR=/data/alice/jlomker/EbE_AVFD_1p2-LHC/PlayGround/job-${PBS_ARRAYID}
 export LOG_FILES_DIR=/data/alice/jlomker/EbE_AVFD_1p2-LHC/PlayGround/job-${PBS_ARRAYID}/logs
 
-outputdir=/dcache/alice/jlomker/sim/NoBField/5.02TeV/Centrality20_30/job-${PBS_ARRAYID}
+outputdir=/dcache/alice/jlomker/sim/BField0.8/5.02TeV/Centrality20_30/job-${PBS_ARRAYID}
 
 #Go to the directory
 cd ${INPUT_FILES_DIR}
