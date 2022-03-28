@@ -8,7 +8,7 @@ EbEAVFD_Parameters = {
     'Centrality'                :   '20-30%',
     'LCC Ratio'                 :   '0%'   ,
     'Axial Charge Ratio'        :   '0.0'   ,
-    'Bfield Life Time'          :   '0.8'   ,
+    'Bfield Life Time'          :   '0.2'   ,
 }
 from os import path, getcwd, remove, makedirs
 from shutil import move, copy, rmtree, copytree
@@ -117,6 +117,7 @@ copy("AVFD_Node/urqmd/uqmd.burner", "Result/parameters/")
 makedirs("PlayGround/");
 makedirs("PlayGround/SRC/AVFD/Initial");
 makedirs("PlayGround/SRC/AVFD/results");
+makedirs("PlayGround/SRC/AVFD/movie");
 makedirs("PlayGround/SRC/iSS_LCC/results");
 makedirs("PlayGround/SRC/urqmd/results");
 makedirs("PlayGround/SRC/Result");
@@ -139,7 +140,8 @@ copy("AVFD_Node/urqmd/urqmd.e", "PlayGround/SRC/urqmd/")
 copy("AVFD_Node/urqmd/runqmd.sh", "PlayGround/SRC/urqmd/")
 copy("AVFD_Node/urqmd/urqmdBinShell.py", "PlayGround/SRC/urqmd/")
 copy("AVFD_Node/urqmd/UrqmdOutputFormatter.py", "PlayGround/SRC/urqmd/")
-
+# EM fields
+copytree("AVFD_Node/Heavy-ion_EM_fields", "PlayGround/SRC/Heavy-ion_EM_fields")
 #####################################################################
 #    3. prepare run.sh -- bash script to run single AVFD event      #
 #####################################################################

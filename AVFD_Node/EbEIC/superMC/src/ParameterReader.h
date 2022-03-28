@@ -9,7 +9,6 @@ Version 1.01 (09-20-2011) Zhi Qiu
 #include <vector>
 #include <string>
 
-
 using namespace std;
 
 class ParameterReader

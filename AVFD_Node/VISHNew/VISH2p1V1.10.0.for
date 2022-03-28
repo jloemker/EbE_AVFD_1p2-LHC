@@ -53,7 +53,7 @@ C===============================================================================
 ! change to 1 to ignore checks
 #define silent_checkPi 0
 #define outputPiviolation .false.
-#define outputMovie .false.
+#define outputMovie .true.
 
 #define echo_level 5
 

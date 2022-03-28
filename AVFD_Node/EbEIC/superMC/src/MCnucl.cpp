@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <ctime>
 #include <sys/time.h>
+#include <memory>
 
 #include "arsenal.h"
 #include "GaussianNucleonsCal.h"
@@ -52,7 +53,7 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
       PT_order = paraRdr->getVal("PT_order");   
   else
       PT_order = 1; //does not apply when there is no PT integration
-  
+
   //.... NN cross sections in mb
   double ecm = paraRdr->getVal("ecm");
   double sig = hadronxsec::totalXsection(200.0,0);
@@ -66,6 +67,8 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
   CCFluctuationModel = paraRdr->getVal("cc_fluctuation_model");
   CCFluctuationK = paraRdr->getVal("cc_fluctuation_k");
   if (CCFluctuationModel) nbd = new NBD;
+  else nbd = NULL;
+
   if (CCFluctuationModel > 5)
   {
      gsl_rng_env_setup();
@@ -73,7 +76,8 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
      gslRng = gsl_rng_alloc(gslRngType);
      timeval a;
      gettimeofday(&a, 0);
-     int randomSeed=a.tv_usec; // randomSeed use CPU clock
+     int randomSeed=paraRdr->getVal("randomSeed");
+     if (randomSeed<0) randomSeed=a.tv_usec; // randomSeed<0 means to use CPU clock
      gsl_rng_set (gslRng, (unsigned long int) randomSeed); //initialize random generator
      ccFluctuationGammaTheta = paraRdr->getVal("cc_fluctuation_Gamma_theta");
   }
@@ -82,24 +86,28 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
   which_mc_model = paraRdr->getVal("which_mc_model");
   sub_model = paraRdr->getVal("sub_model");
   shape_of_nucleons = paraRdr->getVal("shape_of_nucleons");
-  
+
 
   gaussCal = NULL;
   entropy_gaussian_width = 0.0;
   paraRdr->setVal("siginNN", siginNN);
   gaussCal = new GaussianNucleonsCal(paraRdr); // for Gaussian-shaped nucleons calculations
-  entropy_gaussian_width = gaussCal->entropy_gaussian_width;
+  entropy_gaussian_width = gaussCal->width;
   entropy_gaussian_width_sq = entropy_gaussian_width*entropy_gaussian_width;
 
+
+  proj = new Nucleus(paraRdr->getVal("Aproj"),
+                    paraRdr,
+                    paraRdr->getVal("proj_deformed"),
+                    1);
+  targ = new Nucleus(paraRdr->getVal("Atarg"),
+                    paraRdr,
+                    paraRdr->getVal("targ_deformed"),
+                    2);
+
   // adding quark substructure Fluctuations (from Kevin Welsh)
-  shape_of_entropy = paraRdr->getVal("shape_of_entropy"); //For separation of entropy to collision detection (Kevin)
-  if(shape_of_entropy==3)
-  {
-    quark_width = paraRdr->getVal("quark_width");
-    double nucleon_width = gaussCal->width;
-    quark_dist_width = sqrt(nucleon_width*nucleon_width - quark_width*quark_width);
-    gaussDist = new GaussianDistribution(0, quark_dist_width);
-  }
+  shape_of_entropy = paraRdr->getVal("shape_of_entropy");
+  forceCollisionCriterion = paraRdr->getVal("collision_criterion");
 
   dndyTable=0;    // lookup table pointers not valid yet
   dndydptTable=0;
@@ -117,16 +125,22 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
   TA1 = new double* [Maxx];    // 2d grid for proj/targ. thickness functions
   TA2 = new double* [Maxx];
   rho_binary = new double* [Maxx];  // 2d grid for the binary density
+  spectator_1 = new double* [Maxx]; // 2d grid for spectator density from nucleus 1
+  spectator_2 = new double* [Maxx]; // 2d grid for spectator density from nucleus 2
   for(int ix=0;ix<Maxx;ix++)
   {
     TA1[ix] = new double [Maxy];
     TA2[ix] = new double [Maxy];
     rho_binary[ix] = new double [Maxy];
+    spectator_1[ix] = new double [Maxy];
+    spectator_2[ix] = new double [Maxy];
     for(int iy = 0; iy < Maxy; iy++)
     {
        TA1[ix][iy] = 0;
        TA2[ix][iy] = 0;
        rho_binary[ix][iy] = 0;
+       spectator_1[ix][iy] = 0.;
+       spectator_2[ix][iy] = 0.;
     }
   }
 
@@ -141,16 +155,23 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
 
 
 MCnucl::~MCnucl()
+
 {
+  delete proj;
+  delete targ;
+
   for(int ix = 0; ix < Maxx; ix++)
   {
     delete [] TA1[ix];
     delete [] TA2[ix];
     delete [] rho_binary[ix];
+    delete [] spectator_1[ix];
+    delete [] spectator_2[ix];
   }
   delete [] TA1;
-  delete [] TA2;
-  delete [] rho_binary;
+  delete [] TA2;  delete [] rho_binary;
+  delete [] spectator_1;
+  delete [] spectator_2;
 
   delete  rho;
 
@@ -174,28 +195,34 @@ MCnucl::~MCnucl()
   }
 
   if(CCFluctuationModel > 5) gsl_rng_free(gslRng);
-
+  if(nbd) delete nbd;
   if (gaussCal) delete gaussCal;
 }
 
+//Shuzhe Shi added this to enable output of NucleusPosition and I cp'ed it 
 
-//Shuzhe Shi added these to enable output nucleon position.  ==>>
-void MCnucl::PrintNucleonPosition(int event, OverLap* proj, OverLap* targ)
+void MCnucl::PrintNucleonPosition(int event)
 {
     int nn1=proj->getAtomic();
     int nn2=targ->getAtomic();
+    vector<Particle*> nucl1 = proj->getNucleons();
+    vector<Particle*> nucl2 = targ->getNucleons();
     #ifdef DISTRIBUTION_TEST
       nn1 = DT_NUCLEON_NUMBER;
       nn2 = DT_NUCLEON_NUMBER;
     #endif
-    char buffer[200];
-    char nucleonfileA[]="data/NucleonPositions_A_event_%d.dat";
-    char nucleonfileB[]="data/NucleonPositions_B_event_%d.dat";
+    char bufferA[200];
+    char bufferB[200];
+    //string A = Form("data/NucleonPositions_A_event_%d.dat",event);
+    //string B = Form("data/NucleonPositions_B_event_%d.dat",event);
+    char nucleonfileA[]= "data/NucleonPositions_A_event_%d.dat";
+    char nucleonfileB[]= "data/NucleonPositions_B_event_%d.dat";
     ofstream npoutA;
     ofstream npoutB;
 
-    sprintf(buffer, nucleonfileA, event);
-    npoutA.open(buffer);
+    sprintf(bufferA,"data/NucleonPositions_A_event_%d.dat", event);
+    npoutA.open(bufferA);
+    //npoutA.open(nucleonfileA, std::ios_base::app);
     npoutA << nn1 << endl;
     for(int ia=0;ia<nn1;ia++)
     {
@@ -205,9 +232,10 @@ void MCnucl::PrintNucleonPosition(int event, OverLap* proj, OverLap* targ)
       npoutA << x <<"\t"<< y <<"\t"<< z << endl;
     }
     npoutA.close();
-
-    sprintf(buffer, nucleonfileB, event);
-    npoutB.open(buffer);
+	cout<<"A closed"<<endl;
+    sprintf(bufferB,"data/NucleonPositions_B_event_%d.dat", event);
+    npoutB.open(bufferB);
+    //npoutB.open(nucleonfileB, std::ios_base::app);
     npoutB << nn2 << endl;
     for(int ia=0;ia<nn2;ia++) 
     {
@@ -217,20 +245,22 @@ void MCnucl::PrintNucleonPosition(int event, OverLap* proj, OverLap* targ)
       npoutB << x <<"\t"<< y <<"\t"<< z << endl;
     }
     npoutB.close();
+	cout<<"B closed"<<endl;
+  
 }
-//<<== Shuzhe Shi added this to enable output nucleon position.
 
 
 /* place two nuclei/nucleons on the transverse lattice (separated by
    impact parameter b)
 */
-void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
+//stole and modified this one from panos
+/*
+void MCnucl::generateNucleus(double b, Nucleus* proj, Nucleus* targ)
 {
   double rmin=0.9*0.9; // minimal nucleon separation (squared; in fm^2).
   double cx, phi;
   for(int ie=0;ie<overSample;ie++) {
-
-    // nucleus 1
+    //nucleus1
     double xcm=0.0, ycm=0.0, zcm=0.0;
     int nn=proj->getAtomic();
     cx = 1.0-2.0*drand48();
@@ -262,7 +292,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     {
        if(flag_NN_correlation == 0 || nn != 197 || nn != 208)
        {
-          // for large nuclei
+	//for large nuclei
           double number_of_proton=0; //ShuzheShi Added.
           #ifdef DISTRIBUTION_TEST
             nn = DT_NUCLEON_NUMBER;
@@ -272,7 +302,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
             double x,y,z;
             int icon=0;
             do {
-              proj->getDeformRandomWS(x,y,z,1);
+              proj->getDeformRandomWS(x,y,z);
               icon=0;
               for(int i=ie*nn; i<(int)nucl1.size();i++) {
                 double x1=nucl1[i]->getX();
@@ -295,7 +325,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
             double x,y,z;
             int icon=0;
             do {
-              proj->getDeformRandomWS(x,y,z,0);
+              proj->getDeformRandomWS(x,y,z);
               icon=0;
               for(int i=ie*nn; i<(int)nucl1.size();i++) {
                 double x1=nucl1[i]->getX();
@@ -356,16 +386,14 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
           }
 
           // clean up
-          for(int inucleon = 0; inucleon < nn; inucleon++)
-          {
-             delete [] nucleon_positions[inucleon];
-          }
-          delete [] nucleon_positions;
-       }
+        for(int inucleon = 0; inucleon < nn; inucleon++)
+        {
+        delete [] nucleon_positions[inucleon];
+        }
+        delete [] nucleon_positions;
+    	}
     }
-
-
-    // nucleus 2
+	//nucleus2
     xcm=0.0; ycm=0.0; zcm=0.0;
     nn=targ->getAtomic();
 
@@ -407,7 +435,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
             double x,y,z;
             int icon=0;
             do {
-              targ->getDeformRandomWS(x,y,z,1);
+              targ->getDeformRandomWS(x,y,z);
               icon=0;
               for(int i=ie*nn; i<(int)nucl2.size();i++) {
                 double x1=nucl2[i]->getX();
@@ -430,7 +458,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
             double x,y,z;
             int icon=0;
             do {
-              targ->getDeformRandomWS(x,y,z,0);
+              targ->getDeformRandomWS(x,y,z);
               icon=0;
               for(int i=ie*nn; i<(int)nucl2.size();i++) {
                 double x1=nucl2[i]->getX();
@@ -493,190 +521,194 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
           // clean up
           for(int inucleon = 0; inucleon < nn; inucleon++)
           {
-             delete [] nucleon_positions[inucleon];
+          	delete [] nucleon_positions[inucleon];
           }
           delete [] nucleon_positions;
-       }
+          }
+        } 
+     }
+ }
+*/
+
+// In Chun shen version
+void MCnucl::generateNuclei(double b)
+{
+    for(int ie=0;ie<overSample;ie++) {
+        proj->populate(b/2.0,0);
+        targ->populate(-b/2.0,0);
     }
-
-  }
 }
-
-
 
 // --- find participants from proj/target and the number of binary coll. ---
 int MCnucl::getBinaryCollision()
 {
-  int* mapping_table1 = new int[(int)nucl1.size()]; // it stores the index of the nucleon in the participant array if it is wounded; otherwise it's set to -1 (next line)
-  for (int i=0; i<(int)nucl1.size(); i++) mapping_table1[i]=-1; // -1 means it's not wounded
-  int* mapping_table2 = new int[(int)nucl2.size()];
-  for (int i=0; i<(int)nucl2.size(); i++) mapping_table2[i]=-1; // -1 means it's not wounded
-  // decide collision pairs
-  Ncoll=0;
-  for(int i=0;i<(int)nucl1.size();i++) { // loop over proj. nucleons
-    double x1 = nucl1[i]->getX();
-    double y1 = nucl1[i]->getY();
-    for(int j=0;j<(int)nucl2.size();j++) { // loop over targ. nucleons
-      double x2 = nucl2[j]->getX();
-      double y2 = nucl2[j]->getY();
-      double dc = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
-      if(hit(sqrt(dc))) {
-        Ncoll++;
-        // Take care of wounded nucleons registration:
-        nucl1[i]->setNumberOfCollision();
-        // push targ. nucleon j to participant stack (only once though)
-        if(nucl1[i]->getNumberOfCollision()==1)
-        {
-          participant.push_back(new Participant(nucl1[i],1));
-          if(CCFluctuationModel > 5)
-          {
-            if(shape_of_entropy == 3)
-            {
-              double f1 = sampleFluctuationFactorforParticipant();
-              double f2 = sampleFluctuationFactorforParticipant();
-              double f3 = sampleFluctuationFactorforParticipant();
-              participant.back()->getParticle()->setfluctfactorQuarks(f1,f2,f3);
-            }
-            else
-              participant.back()->setfluctfactor(sampleFluctuationFactorforParticipant());
-          }
-          mapping_table1[i] = participant.size()-1;
-        }
-        nucl2[j]->setNumberOfCollision();
-        // push targ. nucleon j to participant stack (only once though)
-        if(nucl2[j]->getNumberOfCollision()==1)
-        {
-          participant.push_back(new Participant(nucl2[j],2));
-          if(CCFluctuationModel > 5)
-          {
-            if(shape_of_entropy == 3)
-            {
-              double f1 = sampleFluctuationFactorforParticipant();
-              double f2 = sampleFluctuationFactorforParticipant();
-              double f3 = sampleFluctuationFactorforParticipant();
-              participant.back()->getParticle()->setfluctfactorQuarks(f1,f2,f3);
-            }
-            else
-              participant.back()->setfluctfactor(sampleFluctuationFactorforParticipant());
-          }
-          mapping_table2[j] = participant.size()-1;
-        }
-        // Take care of binary collision registration:
-        binaryCollision.push_back(new CollisionPair((x1+x2)/2,(y1+y2)/2));
-        if(CCFluctuationModel > 5)
-           binaryCollision.back()->setfluctfactor(sampleFluctuationFactorforBinaryCollision());
-        if (which_mc_model==5 && sub_model==2) // need to know which binary collision happened to which participants
-        {
-          int current_binaryCollision_index = binaryCollision.size()-1;
-          // record collisions to the current participants
-          participant[mapping_table1[i]]->who_hit_me.push_back(current_binaryCollision_index);
-          participant[mapping_table2[j]]->who_hit_me.push_back(current_binaryCollision_index);
-        }
-      }
-    }
-  }
+  bool missingNucleus = false;
 
-  // Additional treatment for Uli-Glb model; restore collision info as weight into binaryCollision array
-  if (which_mc_model==5 && sub_model==2) // Uli-Glb model
+  // Handling for the intrinsic nucleus case
+  if(proj->getAtomic() == 0)
   {
-    for (int i=0; i<participant.size(); i++) // loop over wounded nucleons
-    {
-      int number_of_collsions_to_this_nucleon = participant[i]->who_hit_me.size();
-      double weight_to_add = 1./number_of_collsions_to_this_nucleon;
-      for (int j=0; j<number_of_collsions_to_this_nucleon; j++)
-      {
-        binaryCollision[participant[i]->who_hit_me[j]]->additional_weight += weight_to_add;
+      vector<Particle*> nucl2 = targ->getNucleons();
+      missingNucleus = true;
+      for(int i = 0; i < (int)nucl2.size(); i++){
+          selectFluctFactors(nucl2[i]);
+          nucl2[i]->addCollidingParticle(nucl2[i]);
+          targ->markWounded(nucl2[i]);
       }
-    } // <-> for (int i=0; i<participant.size(); i++)
-  } // <-> (which_mc_model==5 && sub_model==2)
+  }
+  else if(targ->getAtomic() == 0)
+  {
+      vector<Particle*> nucl1 = proj->getNucleons();
+      missingNucleus = true;
+      for(int i = 0; i < (int)nucl1.size(); i++){
+          selectFluctFactors(nucl1[i]);
+          nucl1[i]->addCollidingParticle(nucl1[i]);
+          proj->markWounded(nucl1[i]);
+      }
+  }
+  else
+  {
+      vector<Particle*> projNucleons = proj->getNucleons();
+      vector<Particle*> targNucleons = targ->getNucleons();
+      
+      int startingIndex = 0;
+      for(int iproj = 0; iproj < projNucleons.size(); iproj++)
+      {
+          Particle* projPart = projNucleons[iproj];
+          Box2D projBox = projPart->getBoundingBox();
+          Box2D targBox;
+          
+          // Skip the left most nucleons for each proj nucleon.
+          while(startingIndex < targNucleons.size())
+          {
+              targBox = targNucleons[startingIndex]->getBoundingBox();
+              if(targBox.getXR() >= projBox.getXL())
+                  break;
+              startingIndex++;
+          }
+          
+          // Actually test a collision for the next ones,
+          // until they get too far away.
+          int i = startingIndex;
+          while(i < targNucleons.size()
+                && projBox.getXR() >= targBox.getXL() )
+          {
+              Particle* targPart = targNucleons[i];
+              targBox = targPart->getBoundingBox();
+              
+              if(projBox.getYL() <= targBox.getYR())
+              {
+                  if(projBox.getYR() >= targBox.getYL())
+                  {
+                      // Now we know the boxes do overlap in x and y.
+                      if(hit(projPart,targPart))
+                      {
+                          selectFluctFactors(projPart);
+                          selectFluctFactors(targPart);
+                          projPart->addCollidingParticle(targPart);
+                          targPart->addCollidingParticle(projPart);
+                          proj->markWounded(projPart);
+                          targ->markWounded(targPart);
+                      }
+                  }
+              }
+              i++;
+          }
+          
+          // Continue loop over projBoxes
+      }
+      
+      // Exit hit detection
+  }
 
-  int npart = participant.size();
-  Npart1=0;
-  Npart2=0;
-  for(int i=0;i<npart;i++) {
-    if(participant[i]->isNucl() == 1) Npart1++;
-    if(participant[i]->isNucl() == 2) Npart2++;
-  }
-  if(npart != Npart1+Npart2) {
-    cout << " something is wrong with # of participants " << endl;
-    exit(1);
-  }
-  //cout << "Npart1=" << Npart1 << ", " << "Npart2=" << Npart2 << endl;
+  createBinaryCollisions();
+  Npart1=proj->getNpart();
+  Npart2=targ->getNpart();
+  
   Npart1 /= overSample;
   Npart2 /= overSample;
-
-  delete[] mapping_table1;
-  delete[] mapping_table2;
-
-  return binaryCollision.size();
+  
+  if(missingNucleus)
+    return 1;
+  else
+    return binaryCollision.size();
 }
 
-/* Original
-int MCnucl::getBinaryCollision()
+void MCnucl::selectFluctFactors(Particle* part)
 {
-  Ncoll=0;
-  for(int i=0;i<(int)nucl1.size();i++) { // loop over proj. nucleons
-    double x1 = nucl1[i]->getX();
-    double y1 = nucl1[i]->getY();
-    int part=0;  // no of collision partners for proj. nucleon i
-    for(int j=0;j<(int)nucl2.size();j++) { // loop over targ. nucleons
-      double x2 = nucl2[j]->getX();
-      double y2 = nucl2[j]->getY();
-      double dc = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
-      if(hit(sqrt(dc))) {
-        part++;
-        Ncoll++;
-        binaryCollision.push_back(new CollisionPair((x1+x2)/2,(y1+y2)/2));
-        nucl2[j]->setNumberOfCollision();
-        // push targ. nucleon j to participant stack (only once though)
-        if(nucl2[j]->getNumberOfCollision()==1)
-          participant.push_back(new Participant(nucl2[j],2));
+    if(CCFluctuationModel > 5)
+    {
+      if(shape_of_entropy == 3)
+      {
+        double f1 = sampleFluctuationFactorforParticipant();
+        double f2 = sampleFluctuationFactorforParticipant();
+        double f3 = sampleFluctuationFactorforParticipant();
+        part->setQuarkFluctfactor(f1,f2,f3);
       }
+      else
+        part->setFluctfactor(sampleFluctuationFactorforParticipant());
     }
-    if(part) { // push proj. nucleon i to participant stack, if needed
-      nucl1[i]->setNumberOfCollision(part);
-      participant.push_back(new Participant(nucl1[i],1));
+}
+
+void MCnucl::createBinaryCollisions() {
+    vector<Particle*> projParticipants = proj->getParticipants();
+    // Loop through the participants for just the projectile,
+    // then loop through all the particles that collided with each.
+    for (unsigned int i = 0; i < projParticipants.size(); i++) {
+        Particle* part = projParticipants[i];
+        double partX = part->getX();
+        double partY = part->getY();
+
+        vector<Particle*> collidingParticles = part->getCollidingParticles();
+        for (int j = 0; j < collidingParticles.size(); j++) {
+            Particle* colliding = collidingParticles[j];
+            CollisionPair* pair = (
+                    new CollisionPair((partX + colliding->getX())/2.0,
+                                      (partY + colliding->getY())/2.0));
+
+            if (CCFluctuationModel > 5)
+                pair->setfluctfactor(sampleFluctuationFactorforBinaryCollision());
+
+            if (which_mc_model == 5 && sub_model == 2) {
+                pair->additional_weight += 1/part->getNumberOfCollision();
+                pair->additional_weight += 1/colliding->getNumberOfCollision();
+            }
+            binaryCollision.push_back(pair);
+        }
     }
-  }
-
-  int npart = participant.size();
-  Npart1=0;
-  Npart2=0;
-  for(int i=0;i<npart;i++) {
-    if(participant[i]->isNucl() == 1) Npart1++;
-    if(participant[i]->isNucl() == 2) Npart2++;
-  }
-  if(npart != Npart1+Npart2) {
-    cout << " something is wrong with # of participants " << endl;
-    exit(1);
-  }
-  //cout << "Npart1=" << Npart1 << ", " << "Npart2=" << Npart2 << endl;
-  Npart1 /= overSample;
-  Npart2 /= overSample;
-
-  return binaryCollision.size();
-}*/
-
-
+}
 
 // old stuff
 //  (YN): determine whether nucleons separated by distance dr2 interact or not
 // interaction probability at impact param. b is 1-exp(-sigeff(s)*Tpp(b))
-int MCnucl::hit(double b)
+int MCnucl::hit(Particle* part1, Particle* part2)
 {
-  if (shape_of_nucleons==1) // disc
-    return (b*b<=dsq) ? 1 : 0;  // |r1-r2|^2 < sigma_in(s) / pi
-  else if (shape_of_nucleons>=2 && shape_of_nucleons<=9) // Gaussian nucleon shape
-    return gaussCal->testCollision(b);
-  else
-  {
-    cout << "MCnucl::hit: you shouldn't come to this line. Check your parameters" << endl;
-    exit(-1);
-  }
+    double b = sqrt((part2->getX()-part1->getX())*(part2->getX()-part1->getX())
+                +(part2->getY()-part1->getY())*(part2->getY()-part1->getY()));
+
+    switch(forceCollisionCriterion)
+    {
+        case 1:
+            disk:
+            return (b*b<=dsq) ? 1 : 0;
+        case 2:
+            gauss:
+            return gaussCal->testSmoothCollision(b);
+        case 3:
+            fluctuated:
+            return gaussCal->testFluctuatedCollision(part1,part2);
+        case 4:
+            density:
+            return gaussCal->testCollisionFromDensity(part1,part2);
+        default:
+            if(shape_of_entropy == 1)
+                goto disk;
+            if(shape_of_entropy == 2)
+                goto gauss;
+            if(shape_of_entropy == 3)
+                goto fluctuated;
+            goto disk;
+    }
 }
-
-
-
 // checks whether Npart1+Npart2 is in the desired range
 //   ATTN: Npart1, Npart2 need to be initialized through getBinaryCollision() !
 int MCnucl::CentralityCut()
@@ -689,101 +721,26 @@ int MCnucl::CentralityCut()
 
 // --- determine thickness of proj+targ nuclei over 2d transv. grid,
 //     for given MC event ---
-void MCnucl::getTA2()
+void MCnucl::calculateThickness()
 {
-  int npart = participant.size();
-  double areai = 10.0/siginNN;
   int imax=0;
-
-  double nucleon_width;
-  if (shape_of_nucleons>=2 && shape_of_nucleons<=9) nucleon_width = gaussCal->width;
-  double dc_sq_max_gaussian = 25.*nucleon_width*nucleon_width;
-  double d_max;
-  if (shape_of_nucleons == 1)
-      d_max = 2.*sqrt(dsq);
-  if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
-      d_max = 5.*nucleon_width;
-  double *part_x, *part_y;
-  part_x = new double [npart];
-  part_y = new double [npart];
-  for(int i = 0; i < npart; i++)
-  {
-      part_x[i] = participant[i]->getX();
-      part_y[i] = participant[i]->getY();
-  }
-
-  for(int ix=0;ix<Maxx;ix++)
+  
+  for(int ix=0;ix<Maxx;ix++){
       for(int iy=0;iy<Maxy;iy++)
       {
           TA1[ix][iy]=0.0;
           TA2[ix][iy]=0.0;
       }
-
-    // loop over nucleons which overlap the grid point (xg,yg)
-  for(unsigned int ipart=0; ipart<npart; ipart++)
-  {
-    double x = part_x[ipart];
-    double y = part_y[ipart];
-    int x_idx_left = (int)((x - d_max - Xmin)/dx);
-    int x_idx_right = (int)((x + d_max - Xmin)/dx);
-    int y_idx_left = (int)((y - d_max - Ymin)/dy);
-    int y_idx_right = (int)((y + d_max - Ymin)/dy);
-    x_idx_left = max(0, x_idx_left);
-    x_idx_right = min(Maxx, x_idx_right);
-    y_idx_left = max(0, y_idx_left);
-    y_idx_right = min(Maxy, y_idx_right);
-    for(int ix = x_idx_left; ix < x_idx_right; ix++)
-    {
-       double xg = Xmin + ix*dx;
-       for(int iy = y_idx_left; iy < y_idx_right; iy++)
-       {
-           double yg = Ymin + iy*dy;
-           double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
-           if (shape_of_nucleons==1) // "Checker" nucleons:
-           {
-             if(dc>dsq) continue;
-             if(participant[ipart]->isNucl() == 1)
-             {
-                 TA1[ix][iy] += areai;
-             } 
-             else if(participant[ipart]->isNucl() == 2)
-             {
-                 TA2[ix][iy] += areai;
-             }
-             else
-             {
-                 cout << " Error in getTA2() " << endl;
-                 exit(1);
-             }
-           }
-           else if (shape_of_nucleons>=2 && shape_of_nucleons<=9) // Gaussian nucleons:
-           {
-             // skip distant nucleons, speeds things up; one may need to relax
-             if (dc>dc_sq_max_gaussian) continue;
-             double density = GaussianNucleonsCal::get2DHeightFromWidth(nucleon_width)*exp(-dc/(2.*nucleon_width*nucleon_width)); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
-             if(participant[ipart]->isNucl() == 1)
-             {
-                 TA1[ix][iy] += density;
-             }
-             else if(participant[ipart]->isNucl() == 2)
-             {
-                 TA2[ix][iy] += density;
-             }
-             else
-             {
-                 cout << " Error in getTA2() " << endl;
-                 exit(1);
-             }
-           }
-       }
-    }
   }
+  
+  setThickness(proj,TA1);
+  setThickness(targ,TA2);
 
   for(int ix=0;ix<Maxx;ix++)
       for(int iy=0;iy<Maxy;iy++)
       {
-          int i = int((TA1[ix][iy])/areai+0.5);  // keep track of highest density
-          int j = int((TA2[ix][iy])/areai+0.5);
+          int i = int((TA1[ix][iy])/(10.0/siginNN)+0.5);  // keep track of highest density
+          int j = int((TA2[ix][iy])/(10.0/siginNN)+0.5);
           imax = max(imax,i);
           imax = max(imax,j);
       }
@@ -796,36 +753,77 @@ void MCnucl::getTA2()
        exit(0);
      }
   }
-  delete [] part_x;
-  delete [] part_y;
+}
+
+void MCnucl::setThickness(Nucleus* nucl, double ** TA)
+{
+    vector<Particle*> participant = nucl->getParticipants();
+
+    double nucleon_width;
+    if (shape_of_nucleons>=2 && shape_of_nucleons<=9) 
+        nucleon_width = gaussCal->width;
+
+    double d_max;
+    if (shape_of_nucleons == 1)
+        d_max = 2.*sqrt(dsq);
+    if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
+        d_max = 5.*nucleon_width;
+
+    for(unsigned int ipart=0; ipart<participant.size(); ipart++)
+    {
+      double x = participant[ipart]->getX();
+      double y = participant[ipart]->getY();
+      int x_idx_left = (int)((x - d_max - Xmin)/dx);
+      int x_idx_right = (int)((x + d_max - Xmin)/dx);
+      int y_idx_left = (int)((y - d_max - Ymin)/dy);
+      int y_idx_right = (int)((y + d_max - Ymin)/dy);
+      x_idx_left = max(0, x_idx_left);
+      x_idx_right = min(Maxx, x_idx_right);
+      y_idx_left = max(0, y_idx_left);
+      y_idx_right = min(Maxy, y_idx_right);
+      for(int ix = x_idx_left; ix < x_idx_right; ix++)
+      {
+         double xg = Xmin + ix*dx;
+         for(int iy = y_idx_left; iy < y_idx_right; iy++)
+         {
+             double yg = Ymin + iy*dy;
+             double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
+             if (shape_of_nucleons==1) // "Checker" nucleons:
+             {
+               if(dc>dsq) 
+                   continue;
+               TA[ix][iy] += 10.0/siginNN;
+             }
+             else if (shape_of_nucleons>=2 && shape_of_nucleons<=9) // Gaussian nucleons:
+             {
+                TA[ix][iy] += participant[ipart]->getSmoothTn(xg,yg);
+             }
+         }
+      }
+    }
 }
 
 // calculate the binary collision density in the transverse plane
 void MCnucl::calculate_rho_binary()
 {
-   int ncoll=binaryCollision.size();
+    // We only need to look at one of the nuclei's wounded nucleons
+    // since all colliding nucleons in the targ are in who_hit_me for the
+    // proj.
    double dc_sq_max_gaussian = 25.*entropy_gaussian_width_sq;
    double d_max;
    if (shape_of_nucleons == 1)
        d_max = 2.*sqrt(dsq);
    if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
        d_max = 5.*entropy_gaussian_width;
-   double *binary_x, *binary_y;
-   binary_x = new double [ncoll];
-   binary_y = new double [ncoll];
-   for(int icoll = 0; icoll < ncoll; icoll++)
-   {
-       binary_x[icoll] = binaryCollision[icoll]->getX();
-       binary_y[icoll] = binaryCollision[icoll]->getY();
-   }
+   
    for(int ir = 0; ir < Maxx; ir++)
        for(int jr = 0; jr < Maxy; jr++)
            rho_binary[ir][jr] = 0.0;
-
-   for(int icoll = 0; icoll < ncoll; icoll++)
+   
+   for(int i = 0; i < binaryCollision.size(); i++)
    {
-       double x = binary_x[icoll];
-       double y = binary_y[icoll];
+       double x = binaryCollision[i]->getX();
+       double y = binaryCollision[i]->getY();
        int x_idx_left = (int)((x - d_max - Xmin)/dx);
        int x_idx_right = (int)((x + d_max - Xmin)/dx);
        int y_idx_left = (int)((y - d_max - Ymin)/dy);
@@ -856,8 +854,97 @@ void MCnucl::calculate_rho_binary()
           }
        }
    }
-   delete [] binary_x;
-   delete [] binary_y;
+}
+
+// calculate the spectator density in the transverse plane
+void MCnucl::calculate_spectator_density()
+{
+   int n_nucleon = spectators.size();
+   double dc_sq_max_gaussian = 25.*entropy_gaussian_width_sq;
+   double d_max;
+   if (shape_of_nucleons == 1)
+       d_max = 2.*sqrt(dsq);
+   if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
+       d_max = 5.*entropy_gaussian_width;
+   double *spectator_x, *spectator_y, *spectator_rap;
+   spectator_x = new double [n_nucleon];
+   spectator_y = new double [n_nucleon];
+   spectator_rap = new double [n_nucleon];
+   for(int inucleon = 0; inucleon < n_nucleon; inucleon++)
+   {
+       spectator_x[inucleon] = spectators[inucleon]->getX();
+       spectator_y[inucleon] = spectators[inucleon]->getY();
+       spectator_rap[inucleon] = spectators[inucleon]->getRapidity_Y();
+   }
+   for(int ir = 0; ir < Maxx; ir++)
+   {
+       for(int jr = 0; jr < Maxy; jr++)
+       {
+           spectator_1[ir][jr] = 0.0;
+           spectator_2[ir][jr] = 0.0;
+       }
+   }
+
+   for(int inucleon = 0; inucleon < n_nucleon; inucleon++)
+   {
+       double x = spectator_x[inucleon];
+       double y = spectator_y[inucleon];
+       int nucleus_id = 0;
+       if(spectator_rap[inucleon] > 0.)
+           nucleus_id = 1;
+       else
+           nucleus_id = 2;
+
+       int x_idx_left = (int)((x - d_max - Xmin)/dx);
+       int x_idx_right = (int)((x + d_max - Xmin)/dx);
+       int y_idx_left = (int)((y - d_max - Ymin)/dy);
+       int y_idx_right = (int)((y + d_max - Ymin)/dy);
+       x_idx_left = max(0, x_idx_left);
+       x_idx_right = min(Maxx, x_idx_right);
+       y_idx_left = max(0, y_idx_left);
+       y_idx_right = min(Maxy, y_idx_right);
+       for(int ir = x_idx_left; ir < x_idx_right; ir++)
+       {
+          double xg = Xmin + ir*dx;
+          for(int jr = y_idx_left; jr < y_idx_right; jr++)
+          {
+             double yg = Ymin + jr*dy;
+             double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
+             if (shape_of_nucleons == 1)
+             {
+                if(dc <= dsq) 
+                {
+                   if(nucleus_id == 1)
+                       spectator_1[ir][jr] += (10.0/siginNN);
+                   else
+                       spectator_2[ir][jr] += (10.0/siginNN);
+                }
+             }
+             else if (shape_of_nucleons>=2 && shape_of_nucleons<=9)
+             {
+                if (dc > dc_sq_max_gaussian) 
+                   continue; // skip small numbers to speed up
+
+                if(nucleus_id == 1)
+                    spectator_1[ir][jr] += GaussianNucleonsCal::get2DHeightFromWidth(entropy_gaussian_width)*exp(-dc/(2*entropy_gaussian_width_sq)); 
+                    // this density is normalized to 1, to be consistent with the disk-like treatment; 
+                 else
+                    spectator_2[ir][jr] += GaussianNucleonsCal::get2DHeightFromWidth(entropy_gaussian_width)*exp(-dc/(2*entropy_gaussian_width_sq)); 
+             }
+          }
+       }
+   }
+   delete [] spectator_x;
+   delete [] spectator_y;
+   delete [] spectator_rap;
+}
+
+double MCnucl::get_spectator_density(int nucleus_id, int x, int y)
+{
+    if(nucleus_id == 1)
+        return(spectator_1[x][y]);
+    else
+        return(spectator_2[x][y]);
 }
 
 // --- initializes dN/dyd2rt (or dEt/...) on 2d grid for rapidity slice iy
@@ -866,14 +953,14 @@ void MCnucl::setDensity(int iy, int ipt)
 {
   // which_mc_model==1 -> KLN-like
   if (which_mc_model==1 && ipt>=0 && (dndydptTable==0)) {
-    cout << "ERROR in MCnucl::setDensity() : pt-bin=" << ipt <<
+    cerr << "ERROR in MCnucl::setDensity() : pt-bin=" << ipt <<
       " but no dndydptTable !" << endl;
     exit(0);
   }
 
   // which_mc_model==1 -> KLN-like
   if (which_mc_model==1 && ipt<0 && (dndyTable==0)) {
-    cout <<
+    cerr <<
      "ERROR in MCnucl::setDensity() : pt-integrated yields require dndyTable !" << endl;
     exit(0);
   }
@@ -882,29 +969,13 @@ void MCnucl::setDensity(int iy, int ipt)
 
   rapidity=rapMin + (rapMax-rapMin)/binRapidity*iy;
   dndy=0.0;
- 
+
   double dc_sq_max_gaussian = 25.*entropy_gaussian_width_sq;
   double d_max;
   if (shape_of_nucleons == 1)
       d_max = 2.*sqrt(dsq);
   if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
       d_max = 5.*entropy_gaussian_width;
-  int npart = participant.size();
-  double *part_x = new double [npart];
-  double *part_y = new double [npart];
-  for(int i = 0; i < npart; i++)
-  {
-      part_x[i] = participant[i]->getX();
-      part_y[i] = participant[i]->getY();
-  }
-  int ncoll = binaryCollision.size();
-  double *binary_x = new double [ncoll];
-  double *binary_y = new double [ncoll];
-  for(int i = 0; i < ncoll; i++)
-  {
-      binary_x[i] = binaryCollision[i]->getX();
-      binary_y[i] = binaryCollision[i]->getY();
-  }
 
   if(which_mc_model==1) // MC-KLN
   {
@@ -956,81 +1027,32 @@ void MCnucl::setDensity(int iy, int ipt)
           }
       }
       // wounded nucleon treatment:
-      if (sub_model==1) // "classical" Glb
-      {
+      if (sub_model==1) { // "classical" Glb
+          addDensity(proj, rhop);
+          addDensity(targ, rhop);
           //rhop = (TA1[ir][jr]+TA2[ir][jr])*(1.0-Alpha)/2;
-          double fluctfactor = 1.0;
-          for(unsigned int ipart=0; ipart<participant.size(); ipart++) 
-          {
-            double x = part_x[ipart];
-            double y = part_y[ipart];
-            if(CCFluctuationModel > 5)
-               fluctfactor = participant[ipart]->getfluctfactor();
-            int x_idx_left = (int)((x - d_max - Xmin)/dx);
-            int x_idx_right = (int)((x + d_max - Xmin)/dx);
-            int y_idx_left = (int)((y - d_max - Ymin)/dy);
-            int y_idx_right = (int)((y + d_max - Ymin)/dy);
-            x_idx_left = max(0, x_idx_left);
-            x_idx_right = min(Maxx, x_idx_right);
-            y_idx_left = max(0, y_idx_left);
-            y_idx_right = min(Maxy, y_idx_right);
-            for(int ir = x_idx_left; ir < x_idx_right; ir++)
-            {
-               double xg = Xmin + ir*dx;
-               for(int jr = y_idx_left; jr < y_idx_right; jr++)
-               {
-                   double yg = Ymin + jr*dy;
-                   double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
-                   if (shape_of_entropy==1) // "Checker" nucleons:
-                   {
-                     if(dc>dsq) continue;
-                     double areai = 10.0/siginNN;
-                     rhop[ir][jr] += fluctfactor*areai;
-                   }
-                   else if (shape_of_entropy>=2 && shape_of_entropy<=9) // Gaussian nucleons:
-                   {
-                     // skip distant nucleons, speeds things up; one may need to relax
-                     if (dc>dc_sq_max_gaussian) continue;
-                     double density;
-                     if (shape_of_entropy == 3)
-                     {
-                        density = participant[ipart]->getParticle()->getInternalStructDensity(xg, yg, quark_width, gaussDist); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
-                     }
-                     else
-                     {
-                        density = fluctfactor*GaussianNucleonsCal::get2DHeightFromWidth(entropy_gaussian_width)*exp(-dc/(2.*entropy_gaussian_width_sq)); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
-                     }
-                     rhop[ir][jr] += density;
-                   }
-               }
-            }
-          }
+
           double prefactor = (1.0 - Alpha)/2.;
           for(int ir = 0; ir < Maxx; ir++)
               for(int jr = 0; jr < Maxy; jr++)
                   rhop[ir][jr] = rhop[ir][jr]*prefactor;
-      }
-      else if (sub_model==2) // "Ulrich" Glb
-      {
+      } else if (sub_model==2) {
+          // "Ulrich" Glb
           for(int ir = 0; ir < Maxx; ir++)
               for(int jr = 0; jr < Maxy; jr++)
                   rhop[ir][jr] = 0.0; // no "wounded" contribution
-      }
-      else
-      {
-          cout << "MCnucl::setDensity error: which_mc_model is set to " << which_mc_model << ", but the associated sub_model " << sub_model << " is not recognized." << endl;
+      } else {
+          cerr << "MCnucl::setDensity error: which_mc_model is set to " << which_mc_model << ", but the associated sub_model " << sub_model << " is not recognized." << endl;
           exit(-1);
       }
 
       // binary collision treatment:
-      if(Alpha > 1e-8)
-      {
-          int ncoll=binaryCollision.size();
+      if (Alpha > 1e-8) {
           double fluctfactor = 1.0;
-          for(int icoll=0;icoll<ncoll;icoll++)
+          for(int icoll=0;icoll<binaryCollision.size();icoll++)
           {
-              double x = binary_x[icoll];
-              double y = binary_y[icoll];
+              double x = binaryCollision[icoll]->getX();
+              double y = binaryCollision[icoll]->getY();
               if(CCFluctuationModel > 5)
                   fluctfactor = binaryCollision[icoll]->getfluctfactor();
               int x_idx_left = (int)((x - d_max - Xmin)/dx);
@@ -1061,9 +1083,7 @@ void MCnucl::setDensity(int iy, int ipt)
                  }
               }
           }
-      } 
-      else
-      {
+      } else {
           for(int ir = 0; ir < Maxx; ir++)
               for(int jr = 0; jr < Maxy; jr++)
                   tab[ir][jr] = 0.;
@@ -1077,30 +1097,99 @@ void MCnucl::setDensity(int iy, int ipt)
               rho->setDensity(iy,ir,jr,density);
               dndy += density;
           }
-      for(int ir = 0; ir < Maxx; ir++)
-      {
+      for(int ir = 0; ir < Maxx; ir++) {
           delete [] rhop[ir];
           delete [] tab[ir];
       }
       delete [] rhop;
       delete [] tab;
+  } else if (which_mc_model == 7) {  // Trento Scaling
+      double **rho_A, **rho_B;
+      rho_A = new double * [Maxx];
+      rho_B = new double * [Maxx];
+      for (int ir = 0; ir < Maxx; ir++) {
+          rho_A[ir] = new double [Maxy];
+          rho_B[ir] = new double [Maxy];
+          for (int jr = 0; jr < Maxy; jr++) {
+              rho_A[ir][jr] = 0.0;
+              rho_B[ir][jr] = 0.0;
+          }
+      }
+
+      addDensity(proj, rho_A);
+      addDensity(targ, rho_B);
+
+      // set density profile
+      for (int ir = 0; ir < Maxx; ir++) {
+          for (int jr = 0; jr < Maxy; jr++) {
+              double density = sqrt(rho_A[ir][jr]*rho_B[ir][jr]);
+              rho->setDensity(iy, ir, jr, density);
+              dndy += density;
+          }
+      }
+
+      for (int ir = 0; ir < Maxx; ir++) {
+          delete[] rho_A[ir];
+          delete[] rho_B[ir];
+      }
+      delete[] rho_A;
+      delete[] rho_B;
   }
-  if(dndy<1e-15)
-  {
-    cout << "MCnucl::setDensity dndy = 0 !!  y= " << rapidity
-     << " dndy= " << dndy << endl;
+  if (dndy<1e-15) {
+    cerr << "MCnucl::setDensity dndy = 0 !!  y= " << rapidity
+         << " dndy= " << dndy << endl;
     exit(0);
   }
 
   // Should I include additional fluctuation for MCKLN?
   if (CCFluctuationModel>0 && CCFluctuationModel <= 5) fluctuateCurrentDensity(iy);
-
-  delete [] part_x;
-  delete [] part_y;
-  delete [] binary_x;
-  delete [] binary_y;
 }
 
+void MCnucl::addDensity(Nucleus* nucl, double** dens) {
+    vector<Particle*> participant = nucl->getParticipants();
+    for (unsigned int ipart=0; ipart<participant.size(); ipart++) {
+        Particle* part = participant[ipart];
+        Box2D partBox = part->getBoundingBox();
+        double x = part->getX();
+        double y = part->getY();
+        int x_idx_left = (int)((partBox.getXL() - Xmin)/dx);
+        int x_idx_right = (int)((partBox.getXR() - Xmin)/dx);
+        int y_idx_left = (int)((partBox.getYL() - Ymin)/dy);
+        int y_idx_right = (int)((partBox.getYR() - Ymin)/dy);
+        if (x_idx_left < 0 || y_idx_left < 0
+            || x_idx_left > Maxx || y_idx_left > Maxy) {
+            cerr << "Wounded nucleon extends out of grid bounds " << "("
+                 << part->getX() << "," << part->getY() << ")" << endl;
+        }
+        x_idx_left = max(0, x_idx_left);
+        x_idx_right = min(Maxx, x_idx_right);
+        y_idx_left = max(0, y_idx_left);
+        y_idx_right = min(Maxy, y_idx_right);
+
+        for (int ir = x_idx_left; ir < x_idx_right; ir++) {
+            double xg = Xmin + ir*dx;
+            for (int jr = y_idx_left; jr < y_idx_right; jr++) {
+                double yg = Ymin + jr*dy;
+                double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
+                if (shape_of_entropy==1) { // "Checker" nucleons:
+                   if(dc > dsq)
+                       continue;
+                   double areai = 10.0/siginNN;
+                   dens[ir][jr] += areai*participant[ipart]->getFluctfactor();
+                } else if (shape_of_entropy>=2 && shape_of_entropy<=9) {
+                    // Gaussian nucleons:
+                   double density;
+                   if (shape_of_entropy == 3) {
+                       density = participant[ipart]->getFluctuatedDensity(xg, yg);
+                   } else {
+                       density = participant[ipart]->getSmoothDensity(xg, yg);
+                   }
+                   dens[ir][jr] += density;
+                }
+            }
+        }
+    }
+}
 
 //----------------------------------------------------------------------
 void MCnucl::fluctuateCurrentDensity(int iy)
@@ -1135,8 +1224,8 @@ void MCnucl::fluctuateCurrentDensity(int iy)
     }
     else
     {
-        cout << "MCnucl::fluctuateCurrentDensity error: CCFluctuationModel not supported." << endl;
-        cout << "MCnucl:: CCFluctuationModel = " << CCFluctuationModel << endl;
+        cerr << "MCnucl::fluctuateCurrentDensity error: CCFluctuationModel not supported." << endl;
+        cerr << "MCnucl:: CCFluctuationModel = " << CCFluctuationModel << endl;
         exit(-1);
     }
 }
@@ -1182,10 +1271,10 @@ int progress_counter = 0, progress_percent = 0, last_update = 0;
       progress_counter++;
       progress_percent = (progress_counter*100) / (binRapidity*tmax*tmax);
       if(((progress_percent%10) == 0) && (progress_percent != last_update))
-    {
+        {
        cout << progress_percent << "% : " << std::flush;
        last_update = progress_percent;
-      }
+        }
       }
     }
   }
@@ -1261,10 +1350,10 @@ void MCnucl::makeTable(double ptmin, double dpt, int iPtmax)
   cout << "MCnucl::makeTable(double, double, int): done" << endl;
 }
 
-void MCnucl::dumpdNdyTable4Col(char filename[], double *** dNdyTable, const int iy)
+void MCnucl::dumpdNdyTable4Col(string filename, double *** dNdyTable, const int iy)
 {
   ofstream of;
-  of.open(filename, std::ios_base::app);
+  of.open(filename.c_str(), std::ios_base::app);
 
   double y = rapMin+(rapMax-rapMin)/binRapidity*iy;
 
@@ -1284,10 +1373,10 @@ void MCnucl::dumpdNdyTable4Col(char filename[], double *** dNdyTable, const int 
      of.close();
 }
 
-void MCnucl::dumpdNdydptTable5Col(char filename[], double **** dNdydptTable, const int iy)
+void MCnucl::dumpdNdydptTable5Col(string filename, double **** dNdydptTable, const int iy)
 {
   ofstream of;
-  of.open(filename, std::ios_base::out);
+  of.open(filename.c_str(), std::ios_base::out);
 
   double y = rapMin+(rapMax-rapMin)/binRapidity*iy;
   double iptmax = MaxPT;
@@ -1315,24 +1404,19 @@ void MCnucl::dumpdNdydptTable5Col(char filename[], double **** dNdydptTable, con
 
 void MCnucl::deleteNucleus()
 {
-  for(int i=0;i<(int)nucl1.size();i++) {
-    delete nucl1[i];
-  }
-  for(int i=0;i<(int)nucl2.size();i++) {
-    delete nucl2[i];
-  }
-  for(int i=0;i<(int)participant.size();i++) {
-    delete participant[i];
-  }
+  proj->clearNucleons();
+  targ->clearNucleons();
+
+  // Participants are deleted, as they
+  // reference the same particles as contained in
+  // proj/targ
+
   for(int i=0;i<(int)spectators.size();i++) {
     delete spectators[i];
   }
   for(int i=0;i<(int)binaryCollision.size();i++) {
     delete binaryCollision[i];
   }
-  nucl1.clear();
-  nucl2.clear();
-  participant.clear();
   spectators.clear();
   binaryCollision.clear();
 }
@@ -1360,24 +1444,68 @@ double MCnucl::Angle(const double x,const double y)
 
 void MCnucl::recenterGrid(int iy, int n)
 {
-  rho->getCMAngle(iy, n);
-  rho->recenterParticle(participant, binaryCollision, iy);
+    rho->calcCMAngle(iy, n);
+    double x,y;
+    rho->getCM(x,y,iy);
+
+    vector<Particle*> participants = proj->getParticipants();
+    for(int i = 0; i < participants.size(); i++)
+    {
+        participants[i]->setX(participants[i]->getX()-x);
+        participants[i]->setY(participants[i]->getY()-y);
+    }
+
+    participants = targ->getParticipants();
+    for(int i = 0; i < participants.size(); i++)
+    {
+        participants[i]->setX(participants[i]->getX()-x);
+        participants[i]->setY(participants[i]->getY()-y);
+    }
+
+    for(int i = 0; i < binaryCollision.size(); i++)
+    {
+        binaryCollision[i]->setX(binaryCollision[i]->getX()-x);
+        binaryCollision[i]->setY(binaryCollision[i]->getY()-y);
+    }
+
+    for(int i = 0; i < spectators.size(); i++)
+    {
+        spectators[i]->setX(spectators[i]->getX() - x);
+        spectators[i]->setY(spectators[i]->getY() - y);
+    }
 }
 
 void MCnucl::rotateGrid(int iy, int n)
 {
-  rho->getCMAngle(iy, n);
-  rho->recenterParticle(participant, binaryCollision, iy);
-  rho->rotateParticle(participant, binaryCollision, iy);
+    rho->calcCMAngle(iy,n);
+    double angle = rho->getCMAngle(iy);
+    recenterGrid(iy,n);
+
+    vector<Particle*> participants = proj->getParticipants();
+    for(unsigned int i = 0; i < participants.size(); i++) {
+        participants[i]->rotate(0, angle);
+        participants[i]->calculateBounds();
+    }
+
+    participants = targ->getParticipants();
+    for(unsigned int i = 0; i < participants.size(); i++){
+        participants[i]->rotate(0, angle);
+        participants[i]->calculateBounds();
+    }
+
+    for(unsigned int i = 0; i < binaryCollision.size(); i++)
+        binaryCollision[i]->rotate(0, angle);
+    for(unsigned int i = 0; i < spectators.size(); i++)
+        spectators[i]->rotate(0, angle);
 }
 
 
-void MCnucl::dumpBinaryTable(char filename[])
+void MCnucl::dumpBinaryTable(string filename)
 {
   double x,y;
   ofstream of;
 
-  of.open(filename/*, std::ios_base::app*/);
+  of.open(filename.c_str(), std::ios_base::app);
   for (int idx=0; idx<binaryCollision.size(); idx++)
   {
     x = binaryCollision[idx]->getX();
@@ -1387,57 +1515,33 @@ void MCnucl::dumpBinaryTable(char filename[])
         << endl;
   }
   of.close();
-  
-  /* for debug
+
   of.open("data/wounded.data");
-  for (int idx=0; idx<participant.size(); idx++)
-  {
-    x = participant[idx]->getX();
-    y = participant[idx]->getY();
-    of  << setprecision(3) << setw(10) << x
-        << setprecision(3) << setw(10) << y
-        << endl;
-  }
+  proj->dumpParticipants(of);
+  targ->dumpParticipants(of);
+  of.close();
+
+  of.open("data/quarks.data",ios_base::app);
+  proj->dumpQuarks(of);
+  targ->dumpQuarks(of);
   of.close();
 
   of.open("data/nucl1.data");
-  for (int idx=0; idx<nucl1.size(); idx++)
-  {
-    x = nucl1[idx]->getX();
-    y = nucl1[idx]->getY();
-    of  << setprecision(3) << setw(10) << x
-        << setprecision(3) << setw(10) << y
-        << endl;
-  }
+  proj->dumpNucleons(of);
   of.close();
 
   of.open("data/nucl2.data");
-  for (int idx=0; idx<nucl2.size(); idx++)
-  {
-    x = nucl2[idx]->getX();
-    y = nucl2[idx]->getY();
-    of  << setprecision(3) << setw(10) << x
-        << setprecision(3) << setw(10) << y
-        << endl;
-  }
+  targ->dumpNucleons(of);
   of.close();
-  */
+
 }
 
-void MCnucl::dumpparticipantTable(char filename[])
+void MCnucl::dumpparticipantTable(string filename)
 {
-  double x,y;
   ofstream of;
-
-  of.open(filename/*, std::ios_base::app*/);
-  for (int idx=0; idx<participant.size(); idx++)
-  {
-    x = participant[idx]->getX();
-    y = participant[idx]->getY();
-    of  << setprecision(3) << setw(10) << x
-        << setprecision(3) << setw(10) << y
-        << endl;
-  }
+  of.open(filename.c_str(), std::ios_base::app);
+  proj->dumpParticipants(of);
+  targ->dumpParticipants(of);
   of.close();
 }
 
@@ -1449,6 +1553,8 @@ int MCnucl::getSpectators()
   //calculate the rapidity_Y for spectators at a given collision energy
   double v_z = sqrt(1. - 1./((ecm/2.)*(ecm/2.)));
   double rapidity_Y = 0.5*log((1. + v_z)/(1. - v_z + 1e-100));
+  vector<Particle*> nucl1 = proj->getNucleons();
+  vector<Particle*> nucl2 = targ->getNucleons();
   for(int i=0;i<(int)nucl1.size();i++) { // loop over proj. nucleons
     if(nucl1[i]->getNumberOfCollision()==0) {
       double x1 = nucl1[i]->getX();
@@ -1492,12 +1598,18 @@ double MCnucl::sampleFluctuationFactorforParticipant()
 {
    double eps = 1e-8;
    double fluctfactor = 1.0;
-   double Gamma_k = 1./ccFluctuationGammaTheta;
-   double k_part = (1 - Alpha + eps)/2.*Gamma_k;
-   double theta_part = 2./(1 - Alpha + eps)*ccFluctuationGammaTheta;
+   double theta = ccFluctuationGammaTheta;
+   double Gamma_k = 1./theta;
+   // The quark having 1/3 entropy is built into the fluctfactor
+   if(shape_of_entropy == 3)
+   {
+      Gamma_k /=3.0;
+   }
+   double k_part = (1 - Alpha + eps)/2.*Gamma_k;    
+   double theta_part = 2./(1 - Alpha + eps)*theta;
    if(CCFluctuationModel == 6)  //Gamma distribution for MC-Glauber
       fluctfactor = gsl_ran_gamma(gslRng, k_part, theta_part);
-   
+
    return(fluctfactor);
 }
 
@@ -1510,6 +1622,28 @@ double MCnucl::sampleFluctuationFactorforBinaryCollision()
    double theta_binary = 1./(Alpha+eps)*ccFluctuationGammaTheta;
    if(CCFluctuationModel == 6)  //Gamma distribution for MC-Glauber
       fluctfactor = gsl_ran_gamma(gslRng, k_binary, theta_binary);
-   
+
    return(fluctfactor);
+}
+
+Box2D MCnucl::getHotSpots(vector<Box2D> & hotSpots)
+{
+    hotSpots.clear();
+
+    vector<Particle*> participants = proj->getParticipants();
+    for(int i = 0; i < participants.size(); i++)
+        hotSpots.push_back(participants[i]->getBoundingBox());
+
+    participants = targ->getParticipants();
+    for(int i = 0; i < participants.size(); i++)
+        hotSpots.push_back(participants[i]->getBoundingBox());
+
+    for(int i = 0; i < binaryCollision.size(); i++)
+        hotSpots.push_back(binaryCollision[i]->getBoundingBox());
+
+    Box2D hotSpot = hotSpots[0];
+
+    for(int i = 1; i < hotSpots.size(); i++)
+        hotSpot.overUnion(hotSpots[i]);
+    return hotSpot;
 }

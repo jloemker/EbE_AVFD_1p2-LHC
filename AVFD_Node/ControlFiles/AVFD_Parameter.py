@@ -4,7 +4,7 @@ AVFD_Parameters = {
 	'Print Number Density'		:	0.00	,
 	'Axial Charge Damping'		:	0.00	,
 	'B Field Strength'			:	0.00	,
-	'B Field LifeTime'			:	0.8	,
+	'B Field LifeTime'			:	0.2	,
 	'Vector Relaxation Time'	:	0.50	,
 	'Axial Relaxation Time'		:	0.50	,
 	'Vector Conductivity'		:	0.10	,

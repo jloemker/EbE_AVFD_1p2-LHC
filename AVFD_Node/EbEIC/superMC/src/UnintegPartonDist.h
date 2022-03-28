@@ -16,9 +16,9 @@ class UnintegPartonDist
   virtual double getQs(double, double)=0;
   virtual double getMax_kt() =0;  // max transv. momentum for given UGD set
 
-  static const double x0;  // = 0.01; assumed starting point of small-x evolution
-  static const double xCut;  // = 0.1; minimal x_proj for Large_x()
-  static const double lgXlambda; /* = 0.3; evolution speed of Qs(x), for large-x
+  static const double x0 = 0.01;  // assumed starting point of small-x evolution
+  static const double xCut = 0.1;  // minimal x_proj for Large_x()
+  static const double lgXlambda = 0.3; /* evolution speed of Qs(x), for large-x
 				  extrapolation according to ~exp(lambda*Y) */
 };
 #endif

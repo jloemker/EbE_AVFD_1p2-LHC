@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <algorithm>
 #include "KLNModel.h"
+#include "Nucleus.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -11,10 +12,6 @@
 
 
 using namespace std;
-
-const double UnintegPartonDist::x0 = 0.01; 
-const double UnintegPartonDist::xCut = 0.1; 
-const double UnintegPartonDist::lgXlambda = 0.3; 
 
 Large_x::Large_x(KLNModel* klnX, UnintegPartonDist* rcBKugdX)
 {
@@ -41,7 +38,7 @@ Large_x::Large_x(KLNModel* klnX, UnintegPartonDist* rcBKugdX)
   // for Gaussian integration
   xg = new double [38];
   wg = new double [38];
-  OverLap::Gauss38(0.0,1.0,xg,wg);
+  Nucleus::Gauss38(0.0,1.0,xg,wg);
 
 }
 

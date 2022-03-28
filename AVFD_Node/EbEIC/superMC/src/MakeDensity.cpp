@@ -22,7 +22,9 @@ MakeDensity::MakeDensity(ParameterReader *paraRdr_in)
 {
   paraRdr = paraRdr_in; // where all parameters are1
 
-  eos.loadEOSFromFile("EOS/s95p-v1/EOS_PST.dat","EOS/s95p-v1/coeff.dat");
+  // eos.loadEOSFromFile("s95p-PCE/EOS_converted.dat","s95p-PCE/coeff.dat");
+  // eos.loadEOSFromFile("EOS/s95p-v1/EOS_PST.dat","EOS/s95p-v1/coeff.dat");
+  eos.loadEOSFromBinaryFile("EOS/hotQCD/hrg_hotqcd_eos_binary.dat");
 
   int which_mc_model = paraRdr->getVal("which_mc_model");
   finalFactor = paraRdr->getVal("finalFactor");
@@ -37,10 +39,6 @@ MakeDensity::MakeDensity(ParameterReader *paraRdr_in)
   cutdSdy = paraRdr->getVal("cutdSdy");
   cutdSdy_lowerBound = paraRdr->getVal("cutdSdy_lowerBound");
   cutdSdy_upperBound = paraRdr->getVal("cutdSdy_upperBound");
-
-  // renaming of A for proj+targ
-  Anucl1 = paraRdr->getVal("Aproj");
-  Anucl2 = paraRdr->getVal("Atarg");
 
   // fix grid properties
   Xmax = paraRdr->getVal("maxx");
@@ -76,10 +74,7 @@ MakeDensity::MakeDensity(ParameterReader *paraRdr_in)
   //operator option
   Operation = paraRdr->getVal("operation");
 
-  // generate proj+targ MC thickness functions
-  proj = new OverLap(paraRdr, Anucl1, siginNN, paraRdr->getVal("proj_deformed"), paraRdr->getVal("Zproj"));
-  targ = new OverLap(paraRdr, Anucl2, siginNN, paraRdr->getVal("targ_deformed"), paraRdr->getVal("Ztarg"));
-
+  // generate proj+targ nuclei
   // overlap proj+targ on transverse grid
   mc = new MCnucl(paraRdr);
 
@@ -142,10 +137,10 @@ MakeDensity::MakeDensity(ParameterReader *paraRdr_in)
 MakeDensity::~MakeDensity()
 {
   if (val) delete val;
-  delete proj; delete targ;
   if (kln) delete kln;
   if (wf) delete wf;
   if (mc) delete mc;
+
 }
 //----------------------------------------------------------------------
 
@@ -189,10 +184,11 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
   int use_ed = paraRdr->getVal("use_ed");
   int use_block = paraRdr->getVal("use_block");
   int use_4col = paraRdr->getVal("use_4col");
-  
+
   int output_rho_binary = paraRdr->getVal("output_rho_binary");
   int output_TA = paraRdr->getVal("output_TA");
   int output_rhob = paraRdr->getVal("output_rhob");
+  int output_spectator_density = paraRdr->getVal("output_spectator_density");
 
   // binary density profile (rotated using entropy density):
   char file_rho_binary_4col[] = "data/rho_binary_event_%d_4col.dat";
@@ -249,6 +245,28 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
            rhob_sd[iy][i][j]=0;
     }
   }
+  // spectator density profile
+  char file_spectator_density_A_4col[] = "data/spectator_density_A_event_%d_4col.dat";
+  char file_spectator_density_B_4col[] = "data/spectator_density_B_event_%d_4col.dat";
+  char file_spectator_density_A_block[] = "data/spectator_density_A_event_%d_block.dat";
+  char file_spectator_density_B_block[] = "data/spectator_density_B_event_%d_block.dat";
+  double ***spectator_density_A = new double** [binRapidity];
+  double ***spectator_density_B = new double** [binRapidity];
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    spectator_density_A[iy] =  new double* [Maxx]();
+    spectator_density_B[iy] =  new double* [Maxx]();
+    for(int i=0;i<Maxx;i++)
+    {
+        spectator_density_A[iy][i] = new double[Maxy]();
+        spectator_density_B[iy][i] = new double[Maxy]();
+        for (int j=0;j<Maxy;j++)
+        {
+           spectator_density_A[iy][i][j]=0;
+           spectator_density_B[iy][i][j]=0;
+        }
+    }
+  }
 
   char buffer[200];
   double b;
@@ -263,21 +281,23 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
     while (binary==0 || mc->CentralityCut()==0)
     {
       b = sqrt((bmax*bmax - bmin*bmin)*drand48()+bmin*bmin);
-      mc->generateNucleus(b,proj,targ);
+//    cout << "generate Nucleus from Panos and Shi "<< endl;
+      //mc->generateNucleus(b, proj, targ);
+      mc->generateNuclei(b);// makes proj and targ 
       binary = mc->getBinaryCollision();
       //mc->dumpBinaryTable(); // for debugging
       if(binary==0 || mc->CentralityCut()==0) mc->deleteNucleus();
       tries++;
       if (tries>300)
       {
-          cout << "===== MakeDensity::generate error =====" << endl
+          cerr << "===== MakeDensity::generate error =====" << endl
               << "No collisions detected after maximum number of tries." << endl
               << "What impact parameter are you using?" << endl;
           //exit(-1); // no more tries: something must be wrong.
           tries=0;
       }
     }
-    mc->PrintNucleonPosition(event,proj,targ);//Shuzhe Shi added this to enable output nucleon position.
+    mc->PrintNucleonPosition(event);// new for print actually funct of b, proj, targ ..but I hoped it could work like this ...
     Npart = mc->getNpart1()+mc->getNpart2();
     sprintf(buffer, file_participant, event);
     mc->dumpparticipantTable(buffer); // for collision profile
@@ -288,7 +308,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
 
     // is event-by-event calculation; no need to rotate
     // compute density before rotation.
-    mc->getTA2();
+    mc->calculateThickness();
 
     bool cutdSdypassFlag = true;
     for(int iy=0;iy<binRapidity;iy++) {
@@ -398,6 +418,33 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
            dumpDensityBlock(buffer, rhob_sd, iy);
          }
       }
+      // output spectator density
+      if (output_spectator_density)
+      {
+         mc->calculate_spectator_density();
+         for(int i=0;i<Maxx;i++)
+         {
+            for(int j=0;j<Maxy;j++)
+            {
+               spectator_density_A[iy][i][j] = mc->get_spectator_density(1, i, j);
+               spectator_density_B[iy][i][j] = mc->get_spectator_density(2, i, j);
+            }
+         }
+         if (use_4col)
+         {
+             sprintf(buffer, file_spectator_density_A_4col, event);
+             dumpDensity4Col(buffer, spectator_density_A, iy);
+             sprintf(buffer, file_spectator_density_B_4col, event);
+             dumpDensity4Col(buffer, spectator_density_B, iy);
+         }
+         if (use_block)
+         {
+           sprintf(buffer, file_spectator_density_A_block, event);
+           dumpDensityBlock(buffer, spectator_density_A, iy);
+           sprintf(buffer, file_spectator_density_B_block, event);
+           dumpDensityBlock(buffer, spectator_density_B, iy);
+         }
+      }
     } // <-> for(int iy=0;iy<binRapidity;iy++)
 
     mc->deleteNucleus();
@@ -439,6 +486,18 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
   }
   delete [] nuclear_TA_sd;
   delete [] nuclear_TB_sd;
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    for(int i=0;i<Maxx;i++)
+    {
+       delete [] spectator_density_A[iy][i];
+       delete [] spectator_density_B[iy][i];
+    }
+    delete [] spectator_density_A[iy];
+    delete [] spectator_density_B[iy];
+  }
+  delete [] spectator_density_A;
+  delete [] spectator_density_B;
 }
 //----------------------------------------------------------------------
 
@@ -500,7 +559,7 @@ void MakeDensity::generate_profile_ebe(int nevent)
   int use_ed = paraRdr->getVal("use_ed");
   int use_block = paraRdr->getVal("use_block");
   int use_4col = paraRdr->getVal("use_4col");
-  
+
   int use_5col = 0;
   int use_ptCol = 0;
   // sub-switch
@@ -523,27 +582,26 @@ void MakeDensity::generate_profile_ebe(int nevent)
     while (binary==0 || mc->CentralityCut()==0)
     {
       b = sqrt((bmax*bmax - bmin*bmin)*drand48()+bmin*bmin);
-      mc->generateNucleus(b,proj,targ);
+      mc->generateNuclei(b);
       binary = mc->getBinaryCollision();
       //mc->dumpBinaryTable(); // for debugging
       if(binary==0 || mc->CentralityCut()==0) mc->deleteNucleus();
       tries++;
       if (tries>300)
       {
-          cout << "===== MakeDensity::generate error =====" << endl
+          cerr << "===== MakeDensity::generate error =====" << endl
               << "No collisions detected after maximum number of tries." << endl
               << "What impact parameter are you using?" << endl;
           //exit(-1); // no more tries: something must be wrong.
           tries=0;
       }
     }
-    //mc->PrintNucleonPosition(event,proj,targ);//Shuzhe Shi added this to enable output nucleon position.
     Npart = mc->getNpart1()+mc->getNpart2();
-    //mc->dumpBinaryTable(); // for collision profile
+    mc->dumpBinaryTable("data/binary.dat");
 
     // is event-by-event calculation; no need to rotate
     // compute density before rotation.
-    mc->getTA2();
+    mc->calculateThickness();
 
     bool cutdSdypassFlag = true;
     if(PTinte>0)
@@ -595,7 +653,7 @@ void MakeDensity::generate_profile_ebe(int nevent)
 
     //calculate pT unintegrated particle distribution
     if((PTinte<0 or MixedMode>0) and cutdSdypassFlag)
-    {               
+    {
       for(int iy=0;iy<binRapidity;iy++) 
       {
         for(int ipt=0;ipt<MaxPT;ipt++) 
@@ -694,6 +752,7 @@ void MakeDensity::generate_profile_average(int nevent)
   int output_TATB = paraRdr->getVal("output_TATB");
   int output_rho_binary = paraRdr->getVal("output_rho_binary");
   int output_TA = paraRdr->getVal("output_TA");
+  int output_spectator_density = paraRdr->getVal("output_spectator_density");
 
   // entropy profile:
   char file1_4col[] = "data/sdAvg_order_%d_4col.dat";
@@ -710,7 +769,7 @@ void MakeDensity::generate_profile_average(int nevent)
       }
     }
   }
-  
+
   // energy profile:
   char file2_4col[] = "data/edAvg_order_%d_4col.dat";
   char file2_block[] = "data/edAvg_order_%d_block.dat";
@@ -897,7 +956,7 @@ void MakeDensity::generate_profile_average(int nevent)
           }
       }
   }
-  
+
   char file_rho_binary_sd_4col[] = "data/rho_binary_fromSd_order_%d_4col.dat";
   char file_rho_binary_sd_block[] = "data/rho_binary_fromSd_order_%d_block.dat";
   char file_rho_binary_ed_4col[] = "data/rho_binary_fromEd_order_%d_4col.dat";
@@ -922,7 +981,7 @@ void MakeDensity::generate_profile_average(int nevent)
           }
         }
       }
-      
+
       // binary density profile (rotated using energy density):
       rho_binary_ed  = new double*** [number_of_orders];
       for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
@@ -951,7 +1010,7 @@ void MakeDensity::generate_profile_average(int nevent)
               }
             }
           }
-          
+
           // binary density profile (rotated using energy density):
           rho_binary_ed_RP  = new double*** [number_of_orders];
           for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
@@ -967,7 +1026,7 @@ void MakeDensity::generate_profile_average(int nevent)
           }
       }
   }
-  
+
   char file_TA_sd_4col[] = "data/nuclear_thickness_TA_fromSd_order_%d_4col.dat";
   char file_TA_sd_block[] = "data/nuclear_thickness_TA_fromSd_order_%d_block.dat";
   char file_TA_ed_4col[] = "data/nuclear_thickness_TA_fromEd_order_%d_4col.dat";
@@ -1029,7 +1088,7 @@ void MakeDensity::generate_profile_average(int nevent)
           }
         }
       }
-      
+
       // nuclear thickness function profile (rotated using entropy density):
       nuclear_TB_ed  = new double*** [number_of_orders];
       for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
@@ -1058,7 +1117,7 @@ void MakeDensity::generate_profile_average(int nevent)
               }
             }
           }
-          
+
           // nuclear thickness function profile (rotated using entropy density):
           nuclear_TA_ed_RP  = new double*** [number_of_orders];
           for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
@@ -1072,7 +1131,7 @@ void MakeDensity::generate_profile_average(int nevent)
               }
             }
           }
-          
+
           // nuclear thickness function profile (rotated using entropy density):
           nuclear_TB_sd_RP  = new double*** [number_of_orders];
           for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
@@ -1086,7 +1145,7 @@ void MakeDensity::generate_profile_average(int nevent)
               }
             }
           }
-          
+
           // nuclear thickness function profile (rotated using entropy density):
           nuclear_TB_ed_RP  = new double*** [number_of_orders];
           for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
@@ -1102,8 +1161,75 @@ void MakeDensity::generate_profile_average(int nevent)
           }
       }
   }
-  
+  char file_spectator_A_sd_4col[] = "data/spectator_density_A_fromSd_order_%d_4col.dat";
+  char file_spectator_A_sd_block[] = "data/spectator_density_A_fromSd_order_%d_block.dat";
+  char file_spectator_A_ed_4col[] = "data/spectator_density_A_fromEd_order_%d_4col.dat";
+  char file_spectator_A_ed_block[] = "data/spectator_density_A_fromEd_order_%d_block.dat";
+  char file_spectator_B_sd_4col[] = "data/spectator_density_B_fromSd_order_%d_4col.dat";
+  char file_spectator_B_sd_block[] = "data/spectator_density_B_fromSd_order_%d_block.dat";
+  char file_spectator_B_ed_4col[] = "data/spectator_density_B_fromEd_order_%d_4col.dat";
+  char file_spectator_B_ed_block[] = "data/spectator_density_B_fromEd_order_%d_block.dat";
+  double ****spectator_density_A_sd, ****spectator_density_B_sd;
+  double ****spectator_density_A_ed, ****spectator_density_B_ed;
+  if (output_spectator_density == 1)
+  {
+      // spectator density (rotated using entropy density):
+      spectator_density_A_sd  = new double*** [number_of_orders];
+      for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+      {
+        spectator_density_A_sd[iorder] = new double** [binRapidity];
+        for(int iy=0;iy<binRapidity;iy++) {
+          spectator_density_A_sd[iorder][iy] =  new double* [Maxx]();
+          for(int i=0;i<Maxx;i++) {
+              spectator_density_A_sd[iorder][iy][i] = new double[Maxy]();
+              for (int j=0;j<Maxy;j++)
+                  spectator_density_A_sd[iorder][iy][i][j]=0;
+          }
+        }
+      }
+      spectator_density_B_sd  = new double*** [number_of_orders];
+      for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+      {
+        spectator_density_B_sd[iorder] = new double** [binRapidity];
+        for(int iy=0;iy<binRapidity;iy++) {
+          spectator_density_B_sd[iorder][iy] =  new double* [Maxx]();
+          for(int i=0;i<Maxx;i++) {
+              spectator_density_B_sd[iorder][iy][i] = new double[Maxy]();
+              for (int j=0;j<Maxy;j++)
+                  spectator_density_B_sd[iorder][iy][i][j]=0;
+          }
+        }
+      }
 
+      // spectator density (rotated using energy density):
+      spectator_density_A_ed  = new double*** [number_of_orders];
+      for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+      {
+        spectator_density_A_ed[iorder] = new double** [binRapidity];
+        for(int iy=0;iy<binRapidity;iy++) {
+          spectator_density_A_ed[iorder][iy] =  new double* [Maxx]();
+          for(int i=0;i<Maxx;i++) {
+              spectator_density_A_ed[iorder][iy][i] = new double[Maxy]();
+              for (int j=0;j<Maxy;j++)
+                  spectator_density_A_ed[iorder][iy][i][j]=0;
+          }
+        }
+      }
+      spectator_density_B_ed  = new double*** [number_of_orders];
+      for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+      {
+        spectator_density_B_ed[iorder] = new double** [binRapidity];
+        for(int iy=0;iy<binRapidity;iy++) {
+          spectator_density_B_ed[iorder][iy] =  new double* [Maxx]();
+          for(int i=0;i<Maxx;i++) {
+              spectator_density_B_ed[iorder][iy][i] = new double[Maxy]();
+              for (int j=0;j<Maxy;j++)
+                  spectator_density_B_ed[iorder][iy][i][j]=0;
+          }
+        }
+      }
+  }
+  
   long event = 1;
 
   // prepare to use ArraySaver class to auto-backup intermediate results
@@ -1122,14 +1248,14 @@ void MakeDensity::generate_profile_average(int nevent)
     while (binary==0 || mc->CentralityCut()==0)
     {
       double b = sqrt((bmax*bmax - bmin*bmin)*drand48()+bmin*bmin);
-      mc->generateNucleus(b,proj,targ);
+      mc->generateNuclei(b);
       binary = mc->getBinaryCollision();
       //mc->dumpBinaryTable(); // for debugging
       if(binary==0 || mc->CentralityCut()==0) mc->deleteNucleus();
       tries++;
       if (tries>300)
       {
-          cout << "===== MakeDensity::generate error =====" << endl
+          cerr << "===== MakeDensity::generate error =====" << endl
               << "No collisions detected after maximum number of tries." << endl
               << "What impact parameter are you using?" << endl;
           //exit(-1); // no more tries: something must be wrong.
@@ -1137,8 +1263,9 @@ void MakeDensity::generate_profile_average(int nevent)
       }
     }
     Npart = mc->getNpart1()+mc->getNpart2();
+    int Spectator = mc->getSpectators();
     // need to rotate compute density before rotation.
-    mc->getTA2();
+    mc->calculateThickness();
 
     bool cutdSdypassFlag = true;
     for(int iorder=0; iorder<number_of_orders; iorder++)
@@ -1165,7 +1292,7 @@ void MakeDensity::generate_profile_average(int nevent)
               if (generate_RP_profile == 1)
               {
                   mc->recenterGrid(iy, order); // re-center grid according to gluon density
-                  mc->getTA2();
+                  mc->calculateThickness();
                   mc->setDensity(iy, -1); // now it's after rotation
                   setSd(dens_tmp, iy); // includes factor multiplication
                   // averaging --- entropy density:
@@ -1205,7 +1332,7 @@ void MakeDensity::generate_profile_average(int nevent)
                   }
               }
               mc->rotateGrid(iy, order); // rotate grid according to gluon density <-> according to entropy density. Note that different rapidity slices are rotated separately, and this does not quite make sense.
-              mc->getTA2();
+              mc->calculateThickness();
               mc->setDensity(iy, -1); // now it's after rotation
               setSd(dens_tmp, iy); // includes factor multiplication
               // averaging --- entropy density:
@@ -1243,6 +1370,23 @@ void MakeDensity::generate_profile_average(int nevent)
                       nuclear_TB_sd[iorder][iy][i][j] = (nuclear_TB_sd[iorder][iy][i][j]*(event-1) + mc->getTA2(i,j))/(double)(event); // event = number of succeeded events
                   }
               }
+              // dumping binary density profile
+              if (output_spectator_density == 1)
+              {
+                  mc->calculate_spectator_density();
+                  for(int i=0;i<Maxx;i++)
+                  for(int j=0;j<Maxy;j++)
+                  {
+                      spectator_density_A_sd[iorder][iy][i][j] = (
+                          (spectator_density_A_sd[iorder][iy][i][j]*(event-1) 
+                           + mc->get_spectator_density(1, i, j))
+                          /(double)(event));
+                      spectator_density_B_sd[iorder][iy][i][j] = (
+                          (spectator_density_B_sd[iorder][iy][i][j]*(event-1) 
+                           + mc->get_spectator_density(2, i, j))
+                          /(double)(event));
+                  }
+              }
           }
           // average energy profile
           if (use_ed)
@@ -1256,7 +1400,7 @@ void MakeDensity::generate_profile_average(int nevent)
               if(generate_RP_profile == 1)
               {
                   mc->recenterGrid(iy, order); // re-center grid according to energy density
-                  mc->getTA2();
+                  mc->calculateThickness();
                   mc->setDensity(iy, -1); // now it's after rotation
                   setEd(dens_tmp, iy); // includes factor multiplication
                   // averaging --- entropy density:
@@ -1296,7 +1440,7 @@ void MakeDensity::generate_profile_average(int nevent)
                   }
               }
               mc->rotateGrid(iy, order); // rotate grid according to energy density. Note that different rapidity slices are rotated separately, and this does not quite make sense.
-              mc->getTA2();
+              mc->calculateThickness();
               mc->setDensity(iy, -1); // now it's after rotation
               setEd(dens_tmp, iy); // includes factor multiplication
               // averaging --- entropy density:
@@ -1333,6 +1477,23 @@ void MakeDensity::generate_profile_average(int nevent)
                       nuclear_TB_ed[iorder][iy][i][j] = (nuclear_TB_ed[iorder][iy][i][j]*(event-1) + mc->getTA2(i,j))/(double)(event); // event = number of succeeded events
                   }
               }
+              // dumping binary density profile
+              if (output_spectator_density)
+              {
+                  mc->calculate_spectator_density();
+                  for(int i=0;i<Maxx;i++)
+                  for(int j=0;j<Maxy;j++)
+                  {
+                      spectator_density_A_ed[iorder][iy][i][j] = (
+                          (spectator_density_A_ed[iorder][iy][i][j]*(event-1) 
+                           + mc->get_spectator_density(1, i, j))
+                          /(double)(event));
+                      spectator_density_B_ed[iorder][iy][i][j] = (
+                          (spectator_density_B_ed[iorder][iy][i][j]*(event-1) 
+                           + mc->get_spectator_density(2, i, j))
+                          /(double)(event));
+                  }
+              }
           }
         } // <-> for(int iy=0;iy<binRapidity;iy++)
       }
@@ -1360,7 +1521,7 @@ void MakeDensity::generate_profile_average(int nevent)
             {
               //Rotate according to the weighted center of pt-integrated dN/dyd^2r table
               mc->rotateGrid(iy, order); // rotate grid according to gluon density <-> according to entropy density. Note that different rapidity slices are rotated separately, and this does not quite m
-              mc->getTA2();
+              mc->calculateThickness();
               for(int ipt = 0; ipt < MaxPT; ipt++)
                 mc->setDensity(iy,ipt); // now it's after rotation
               setSd(dens_tmp_pt, iy); // includes factor multiplication
@@ -1381,8 +1542,8 @@ void MakeDensity::generate_profile_average(int nevent)
                 mc->setRho(iy,i,j, dens_tmp[iy][i][j]);
               }
               mc->rotateGrid(iy, order); // rotate grid according to energy density. Note that different rapidity slices are rotated separately, and this does not quite make sense.
-              mc->getTA2();
-              
+              mc->calculateThickness();
+
               for(int ipt = 0; ipt < MaxPT; ipt++)
                 mc->setDensity(iy,ipt); // now it's after rotation
               setEd(dens_tmp_pt, iy); // includes factor multiplication
@@ -1693,6 +1854,46 @@ void MakeDensity::generate_profile_average(int nevent)
                 }
             }
         }
+        // output spectator density
+        if (output_spectator_density)
+        {
+            // spectator density from entropy
+            if (use_sd)
+            {
+                if (use_4col)
+                {
+                  sprintf(buffer, file_spectator_A_sd_4col, order);
+                  dumpDensity4Col(buffer, spectator_density_A_sd[iorder], iy);
+                  sprintf(buffer, file_spectator_B_sd_4col, order);
+                  dumpDensity4Col(buffer, spectator_density_B_sd[iorder], iy);
+                }
+                if (use_block)
+                {
+                  sprintf(buffer, file_spectator_A_sd_block, order);
+                  dumpDensityBlock(buffer, spectator_density_A_sd[iorder], iy);
+                  sprintf(buffer, file_spectator_B_sd_block, order);
+                  dumpDensityBlock(buffer, spectator_density_B_sd[iorder], iy);
+                }
+            }
+            // thickness function from energy
+            if (use_ed)
+            {
+                if (use_4col)
+                {
+                  sprintf(buffer, file_spectator_A_ed_4col, order);
+                  dumpDensity4Col(buffer, spectator_density_A_ed[iorder], iy);
+                  sprintf(buffer, file_spectator_B_ed_4col, order);
+                  dumpDensity4Col(buffer, spectator_density_B_ed[iorder], iy);
+                }
+                if (use_block)
+                {
+                  sprintf(buffer, file_spectator_A_ed_block, order);
+                  dumpDensityBlock(buffer, spectator_density_A_ed[iorder], iy);
+                  sprintf(buffer, file_spectator_B_ed_block, order);
+                  dumpDensityBlock(buffer, spectator_density_B_ed[iorder], iy);
+                }
+            }
+        }
     }
   }
 
@@ -1876,7 +2077,32 @@ void MakeDensity::generate_profile_average(int nevent)
           delete [] nuclear_TB_ed_RP;
       }
   }
-
+  if(output_spectator_density == 1)   // profiles for spectator density
+  {
+      for(int iorder=0; iorder<number_of_orders; iorder++) {
+        for(int iy=0;iy<binRapidity;iy++) {
+          for(int i=0;i<Maxx;i++)
+          {
+             delete [] spectator_density_A_sd[iorder][iy][i];
+             delete [] spectator_density_A_ed[iorder][iy][i];
+             delete [] spectator_density_B_sd[iorder][iy][i];
+             delete [] spectator_density_B_ed[iorder][iy][i];
+          }
+          delete [] spectator_density_A_sd[iorder][iy];
+          delete [] spectator_density_A_ed[iorder][iy];
+          delete [] spectator_density_B_sd[iorder][iy];
+          delete [] spectator_density_B_ed[iorder][iy];
+        }
+        delete [] spectator_density_A_sd[iorder];
+        delete [] spectator_density_A_ed[iorder];
+        delete [] spectator_density_B_sd[iorder];
+        delete [] spectator_density_B_ed[iorder];
+      }
+      delete [] spectator_density_A_sd;
+      delete [] spectator_density_A_ed;
+      delete [] spectator_density_B_sd;
+      delete [] spectator_density_B_ed;
+  }
 }
 //----------------------------------------------------------------------
 
@@ -1914,6 +2140,9 @@ void MakeDensity::generateEccTable(int nevent)
 
   // event start.
   int event=1;
+  Stopwatch sw;
+  double de_dt = 0;
+  cout << endl;
   while (event<=nevent)
   {
     int tries = 0;
@@ -1921,13 +2150,13 @@ void MakeDensity::generateEccTable(int nevent)
     while (binary==0 || mc->CentralityCut()==0)
     {
       b = sqrt((bmax*bmax - bmin*bmin)*drand48()+bmin*bmin);
-      mc->generateNucleus(b,proj,targ);
+      mc->generateNuclei(b);
       binary = mc->getBinaryCollision();
       if(binary==0 || mc->CentralityCut()==0) mc->deleteNucleus();
       tries++;
       if (tries>300)
       {
-          cout << "===== MakeDensity::generate error =====" << endl
+          cerr << "===== MakeDensity::generate error =====" << endl
               << "No collisions detected after maximum number of tries." << endl
               << "What impact parameter are you using?" << endl;
           //exit(-1); // no more tries: something must be wrong.
@@ -1936,9 +2165,9 @@ void MakeDensity::generateEccTable(int nevent)
     }
     Npart = mc->getNpart1()+mc->getNpart2();
     Nbin = mc->getNcoll();
-
+    //mc->dumpBinaryTable("data/binary.dat");
     // compute eccentricity.
-    mc->getTA2();
+    mc->calculateThickness();
 
     bool cutdSdypassFlag = true;
     for(int iy=0;iy<binRapidity;iy++) {
@@ -1970,11 +2199,34 @@ void MakeDensity::generateEccTable(int nevent)
     mc->deleteNucleus();
     if(cutdSdypassFlag)
     {
-      cout << "processing event: " << event << endl;
+      if(event % 50 == 0){
+        sw.toc();
+
+        if(de_dt >= 1e-15)
+          de_dt = (50/sw.takeTime()*0.25 + de_dt*0.75);
+        else
+          de_dt = 50/sw.takeTime();
+
+        int eta = (nevent-event)/de_dt;
+
+        int progress = (int)(10*event/nevent);
+        string bars = "";
+        for(int nBars = 0; nBars < progress; nBars++)
+          bars+="|";
+        cout << "[" << setw(10) << left << bars << right << "]";
+        cout << " eta [" << setw(2)  << setfill('0') << eta/60 << ":";
+        cout << setw(2) << setfill('0') << eta % 60 << ']';
+        cout << setfill(' ');
+        cout << " current [" << setw(5) << setprecision(4) << de_dt << " e/s]\r";
+        cout.flush();
+        sw.tic();
+      }
+
       event++;
     }
   } // <-> while (event<=nevent)
-
+  // To skip the progress line
+  cout << endl;
 
   for(int iy=0;iy<binRapidity;iy++) {
     for(int j=0;j<Maxy;j++) delete [] dens1[iy][j];
@@ -1987,6 +2239,7 @@ void MakeDensity::generateEccTable(int nevent)
     delete [] dens2[iy];
   }
   delete [] dens2;
+
 }
 //----------------------------------------------------------------------
 
@@ -2010,6 +2263,8 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
     double *momp_real = new double[max_order];
     double *momp_imag = new double[max_order];
     double *normp = new double[max_order]; // normp is <r^n>
+    std::vector<double> rn(max_order, 0);    // <r^n> = (int d^2r den*r^n)/(int d^2r den)
+    double density_norm = 0.;
     // initialize:
     for(int i = 0; i < max_order; i++)
     {
@@ -2029,7 +2284,23 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
     }
     xc /= total; yc /= total;
 
-    /*
+    // compute <r^n>
+    for (int ix = 0; ix < Maxx; ix++) {
+        double x_o = Xmin + ix*dx - xc;
+        for (int j = 0; j < Maxy; j++) {
+            double y_o = Ymin + j*dy - yc;
+            double r_o = sqrt(x_o*x_o + y_o*y_o);
+            for (int iorder = 0; iorder < max_order; iorder++) {
+                rn[iorder] += pow(r_o, iorder)*density[iy][ix][j];
+            }
+            density_norm += density[iy][ix][j];
+        }
+    }
+    for (int iorder = 0; iorder < max_order; iorder++) {
+        rn[iorder] /= density_norm;
+    }
+
+/*
     // for overlapping area:
     // method 1, pi*sqrt(<x^2> <y^2>)
     double x2 = 0.0, y2 = 0.0, overlap_area1 = 0.0; // <x^2>, <y^2>, and different definitions for overlapping area
@@ -2063,33 +2334,97 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
         }
     }
     //cout << overlap_sum << "   " << overlap_area1 << "   " << overlap_area2 << endl;
-    */
+*/
 
     // for eccentricity:
+    // Get the smallest rectangle that encapsulates the 
+    // regions where dS/drdphi > 0
+    // Then make a boolean array to signify which sub-regions are important.
+    // This is to avoid double counting, and minimize integration.
+    vector<Box2D> hotSpots;
+    Box2D region = mc->getHotSpots(hotSpots);
+    int nYpoints = (int)((region.getYR()-region.getYL())/dy);
+    int nXpoints = (int)((region.getXR()-region.getXL())/dx);
+    //cout << region.toString() << endl;
+
+    bool ** importantRegions = new bool*[nXpoints];
+    for(int i = 0; i < nXpoints; i++){
+        importantRegions[i] = new bool[nYpoints];
+        for(int j = 0; j < nYpoints; j++)
+            importantRegions[i][j] = false;
+    }
+
+    for(int i = 0; i < hotSpots.size(); i++)
+    {
+        for(int x_i = (int)((hotSpots[i].getXL()-region.getXL())/dx); x_i < (int)((hotSpots[i].getXR()-region.getXL())/dx); x_i++)
+          for(int y_i = (int)((hotSpots[i].getYL()-region.getYL())/dy); y_i < (int)((hotSpots[i].getYR()-region.getYL())/dx); y_i++)
+            importantRegions[x_i][y_i] = true;
+    }/*
+
+    of.open("data/importantRegions.dat");
+    for(int i = 0; i < nXpoints; i++)
+    {
+      for(int j = 0; j < nYpoints; j++)
+      {
+         if(importantRegions[i][j])
+          of << 1;
+        else of << 0;
+        of << " ";
+      }
+      of << endl;
+    }
+    of.close();
+    of.open("data/allRegions.dat");
+    for(int iRegion = 0; iRegion < nXpoints; iRegion++)
+    {
+      for(int jRegion = 0; jRegion < nYpoints; jRegion++)
+      {
+        int i = iRegion + (int)((region.getXL()-Xmin)/dx);
+        int j = jRegion + (int)((region.getYL()-Ymin)/dy);
+         of << density[iy][i][j];
+         of << " ";
+      }
+      of << endl;
+    }
+    of.close();*/
+
+
     for (order=from_order; order<=to_order; order++)
     {
-        // calculate numerator and denominators:
-        for(int i=0;i<Maxx;i++)
-        for(int j=0;j<Maxy;j++)
+        for(int iRegion = 0; iRegion < nXpoints; iRegion++)
         {
-            x = Xmin + i*dx - xc; y = Ymin + j*dy - yc; // shift to center
-            r = sqrt(x*x + y*y); theta = atan2(y,x);
-            mom_real[order] += r*r*cos(order*theta)*density[iy][i][j];
-            mom_imag[order] += r*r*sin(order*theta)*density[iy][i][j];
-            norm[order] += r*r*density[iy][i][j];
-            if(order == 1)
+            for(int jRegion = 0; jRegion < nYpoints; jRegion++)
             {
-               momp_real[order] += pow(r,3)*cos(order*theta)*density[iy][i][j];
-               momp_imag[order] += pow(r,3)*sin(order*theta)*density[iy][i][j];
-               normp[order] += pow(r,3)*density[iy][i][j];
-            }
-            else
-            {
-               momp_real[order] += pow(r,order)*cos(order*theta)*density[iy][i][j];
-               momp_imag[order] += pow(r,order)*sin(order*theta)*density[iy][i][j];
-               normp[order] += pow(r,order)*density[iy][i][j];
+                if(importantRegions[iRegion][jRegion])
+                {
+                    // Convert from indeces in the bool array to
+                    // indeces in the density array
+                    int i = iRegion + (int)((region.getXL()-Xmin)/dx);
+                    int j = jRegion + (int)((region.getYL()-Ymin)/dy);
+
+                    x = Xmin + i*dx - xc; y = Ymin + j*dy - yc; // shift to center
+                    r = sqrt(x*x + y*y); theta = atan2(y,x);
+                    if(i < Maxx && i >=0 && j < Maxy && j >= 0){
+                      mom_real[order] += r*r*cos(order*theta)*density[iy][i][j];
+                      mom_imag[order] += r*r*sin(order*theta)*density[iy][i][j];
+                      norm[order] += r*r*density[iy][i][j];
+                      if(order == 1)
+                      {
+                         momp_real[order] += pow(r,3)*cos(order*theta)*density[iy][i][j];
+                         momp_imag[order] += pow(r,3)*sin(order*theta)*density[iy][i][j];
+                         normp[order] += pow(r,3)*density[iy][i][j];
+                      }
+                      else
+                      {
+                         momp_real[order] += pow(r,order)*cos(order*theta)*density[iy][i][j];
+                         momp_imag[order] += pow(r,order)*sin(order*theta)*density[iy][i][j];
+                         normp[order] += pow(r,order)*density[iy][i][j];
+                      }
+                    }
+                }
             }
         }
+        //cout << bad << endl;
 
         // take ratio; note that the minus sign is just a convention
         mom_real[order] = -mom_real[order]/(norm[order] + eps);
@@ -2102,35 +2437,37 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
 
         if(deformedFlag)
         {
-            of  << setprecision(8) << setw(16) <<  mom_real[order]
-                << setprecision(8) << setw(16) <<  mom_imag[order]
-                << setprecision(8) << setw(16) <<  momp_real[order]
-                << setprecision(8) << setw(16) <<  momp_imag[order]
-                << setprecision(5) << setw(10)  <<  Npart_current
-                << setprecision(5) << setw(10) <<  Nbin_current
-                << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
-                << setprecision(8) << setw(16) <<  b
-            //    << setprecision(8) << setw(16) <<  overlap_area1
-            //     << setprecision(8) << setw(16) <<  overlap_area2
-                << setprecision(8) << setw(16) <<  mc->lastCx1
-                << setprecision(8) << setw(16) <<  mc->lastPh1
-                << setprecision(8) << setw(16) <<  mc->lastCx2
-	          << setprecision(8) << setw(16) <<  mc->lastPh2
-           //      << setprecision(8) << setw(16) <<  xc
-           //    << setprecision(8) << setw(16) <<  yc
-           //    << setprecision(3) << setw(12) <<  rapMin+(rapMax-rapMin)/binRapidity*iy
+            of  << setprecision(8) << setw(16) << mom_real[order]
+                << setprecision(8) << setw(16) << mom_imag[order]
+                << setprecision(8) << setw(16) << momp_real[order]
+                << setprecision(8) << setw(16) << momp_imag[order]
+                << setprecision(8) << setw(16) << rn[order]
+                << setprecision(5) << setw(10) << Npart_current
+                << setprecision(5) << setw(10) << Nbin_current
+                << setprecision(8) << setw(16) << total*dx*dy // integrated profile measure
+                << setprecision(8) << setw(16) << b
+//                << setprecision(8) << setw(16) <<  overlap_area1
+//                << setprecision(8) << setw(16) <<  overlap_area2
+                << setprecision(8) << setw(16) << mc->lastCx1
+                << setprecision(8) << setw(16) << mc->lastPh1
+                << setprecision(8) << setw(16) << mc->lastCx2
+                << setprecision(8) << setw(16) << mc->lastPh2
+//                << setprecision(8) << setw(16) <<  xc
+//                << setprecision(8) << setw(16) <<  yc
+//                << setprecision(3) << setw(12) <<  rapMin+(rapMax-rapMin)/binRapidity*iy
                 << endl;
         }
         else
         {
-            of  << setprecision(8) << setw(16) <<  mom_real[order]
-                << setprecision(8) << setw(16) <<  mom_imag[order]
-                << setprecision(8) << setw(16) <<  momp_real[order]
-                << setprecision(8) << setw(16) <<  momp_imag[order]
-                << setprecision(5) << setw(10) <<  Npart_current
-                << setprecision(5) << setw(10) <<  Nbin_current
-                << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
-                << setprecision(8) << setw(16) <<  b
+            of  << setprecision(8) << setw(16) << mom_real[order]
+                << setprecision(8) << setw(16) << mom_imag[order]
+                << setprecision(8) << setw(16) << momp_real[order]
+                << setprecision(8) << setw(16) << momp_imag[order]
+                << setprecision(8) << setw(16) << rn[order]
+                << setprecision(5) << setw(10) << Npart_current
+                << setprecision(5) << setw(10) << Nbin_current
+                << setprecision(8) << setw(16) << total*dx*dy // integrated profile measure
+                << setprecision(8) << setw(16) << b
                 << endl;
         }
         of.close();
@@ -2138,36 +2475,42 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
 
     sprintf(buffer, base_filename, max_order);
     of.open(buffer, std::ios_base::app);
-    for (order=1; order < max_order; order++)
-    {
+    for (order=1; order < max_order; order++) {
         of  << setprecision(8) << setw(16) <<  mom_real[order]
             << setprecision(8) << setw(16) <<  mom_imag[order]
             << setprecision(8) << setw(16) <<  momp_real[order]
-            << setprecision(8) << setw(16) <<  momp_imag[order];
+            << setprecision(8) << setw(16) <<  momp_imag[order]
+            << setprecision(8) << setw(16) <<  rn[order];
     }
-    if(deformedFlag)
-    {
-        of  << setprecision(5) << setw(10)  <<  Npart_current
-            << setprecision(5) << setw(10) <<  Nbin_current
-            << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
-            << setprecision(8) << setw(16) <<  b
-            << setprecision(8) << setw(16) <<  mc->lastCx1
-            << setprecision(8) << setw(16) <<  mc->lastPh1
-            << setprecision(8) << setw(16) <<  mc->lastCx2
-	      << setprecision(8) << setw(16) <<  mc->lastPh2
+
+    if (deformedFlag) {
+        of  << setprecision(5) << setw(10) << Npart_current
+            << setprecision(5) << setw(10) << Nbin_current
+            << setprecision(8) << setw(16) << total*dx*dy // integrated profile measure
+            << setprecision(8) << setw(16) << b
+            << setprecision(8) << setw(16) << mc->lastCx1
+            << setprecision(8) << setw(16) << mc->lastPh1
+            << setprecision(8) << setw(16) << mc->lastCx2
+            << setprecision(8) << setw(16) << mc->lastPh2
             << endl;
-    }
-    else
-    {
-        of  << setprecision(5) << setw(10) <<  Npart_current
-            << setprecision(5) << setw(10) <<  Nbin_current
-            << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
-            << setprecision(8) << setw(16) <<  b
+    } else {
+        of  << setprecision(5) << setw(10) << Npart_current
+            << setprecision(5) << setw(10) << Nbin_current
+            << setprecision(8) << setw(16) << total*dx*dy // integrated profile measure
+            << setprecision(8) << setw(16) << b
             << endl;
     }
     of.close();
 
-    delete[] mom_real, mom_imag, norm, momp_real, momp_imag, normp;
+    delete[] mom_real;
+    delete[] mom_imag;
+    delete[] norm;
+    delete[] momp_real;
+    delete[] momp_imag;
+    delete[] normp;
+    for (int i = 0; i < nXpoints; i++)
+        delete[] importantRegions[i];
+    delete[] importantRegions;
 }
 
 
@@ -2187,7 +2530,8 @@ void MakeDensity::setEd(double*** data, const int iy)
     for(int i=0;i<Maxx;i++)
     for(int j=0;j<Maxy;j++)
     {
-        data[iy][i][j] = eos.edFromSd(mc->getRho(iy,i,j)*finalFactor);
+        //data[iy][i][j] = eos.edFromSd(mc->getRho(iy,i,j)*finalFactor);
+        data[iy][i][j] = mc->getRho(iy,i,j)*finalFactor;
     }
 }
 
@@ -2232,7 +2576,8 @@ double MakeDensity::gettotaldSdy(const int iy)
 void MakeDensity::dumpDensity4Col(char filename[], double *** data, const int iy)
 {
   ofstream of;
-  of.open(filename, std::ios_base::app);
+  //of.open(filename, std::ios_base::app);
+  of.open(filename, std::ios_base::out);
   of  << "# <npart>= " << Npart
       << " xmax= " << Maxx << " ymax= " << Maxy
       << endl;
@@ -2243,11 +2588,11 @@ void MakeDensity::dumpDensity4Col(char filename[], double *** data, const int iy
       double x = Xmin + i*dx;
       double y = Ymin + j*dy;
       double rap = rapMin+(rapMax-rapMin)/binRapidity*iy;
-      of <<  setprecision(3) << setw(10) <<  rap
-          << setprecision(3) << setw(10) <<  x
-          << setprecision(3) << setw(10) <<  y
-          << setprecision(12) << setw(22) <<  data[iy][i][j]
-	  << endl;
+      of << setprecision(3) << setw(10) <<  rap
+         << setprecision(3) << setw(10) <<  x
+         << setprecision(3) << setw(10) <<  y
+         << setprecision(12) << setw(22) <<  data[iy][i][j]
+         << endl;
     }
   of.close();
 }
@@ -2255,11 +2600,10 @@ void MakeDensity::dumpDensity4Col(char filename[], double *** data, const int iy
 void MakeDensity::dumpDensityBlock(char filename[], double *** data, const int iy)
 {
   ofstream of;
-  of.open(filename, std::ios_base::app);
+  //of.open(filename, std::ios_base::app);
+  of.open(filename, std::ios_base::out);
   for(int i=0;i<Maxx;i++) {
     for(int j=0;j<Maxy;j++) {
-      double x = Xmin + i*dx;
-      double y = Ymin + j*dy;
       of << setprecision(12) << setw(22) << data[iy][i][j];
     }
     of << endl;
