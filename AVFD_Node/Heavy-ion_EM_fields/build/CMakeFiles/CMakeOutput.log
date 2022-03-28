@@ -1,0 +1,279 @@
+The system is: Linux - 3.10.0-1160.42.2.el7.x86_64 - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/2.8.12.2/CompilerIdC/a.out"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++ 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/2.8.12.2/CompilerIdCXX/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/bin/gmake "cmTryCompileExec3158086398/fast"
+gmake[1]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/bin/gmake -f CMakeFiles/cmTryCompileExec3158086398.dir/build.make CMakeFiles/cmTryCompileExec3158086398.dir/build
+gmake[2]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3158086398.dir/testCCompiler.c.o
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc    -o CMakeFiles/cmTryCompileExec3158086398.dir/testCCompiler.c.o   -c /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTryCompileExec3158086398
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3158086398.dir/link.txt --verbose=1
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc       CMakeFiles/cmTryCompileExec3158086398.dir/testCCompiler.c.o  -o cmTryCompileExec3158086398 -rdynamic 
+gmake[2]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/bin/gmake "cmTryCompileExec910547040/fast"
+gmake[1]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/bin/gmake -f CMakeFiles/cmTryCompileExec910547040.dir/build.make CMakeFiles/cmTryCompileExec910547040.dir/build
+gmake[2]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc    -o CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+Linking C executable cmTryCompileExec910547040
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec910547040.dir/link.txt --verbose=1
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc     -v CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o  -o cmTryCompileExec910547040 -rdynamic  
+Using built-in specs.
+COLLECT_GCC=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc
+COLLECT_LTO_WRAPPER=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: ../gcc/configure --prefix=/jenkins/workspace/build-any-ib/sw/20156248/1/INSTALLROOT/9e762b1877ff3034791123efa3be572fdf9f4577/slc6_x86-64/GCC-Toolchain/v7.3.0-alice2-13 --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --enable-languages=c,c++,fortran --disable-multilib --enable-ld=default --enable-lto --disable-nls
+Thread model: posix
+gcc version 7.3.0 (GCC) 
+COMPILER_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/bin/
+LIBRARY_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec910547040' '-rdynamic' '-mtune=generic' '-march=x86-64'
+ /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/collect2 -plugin /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/liblto_plugin.so -plugin-opt=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccGGcZXD.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec910547040 /lib/../lib64/crt1.o /lib/../lib64/crti.o /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtbegin.o -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../.. CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtend.o /lib/../lib64/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec910547040' '-rdynamic' '-mtune=generic' '-march=x86-64'
+gmake[2]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:/bin/gmake "cmTryCompileExec910547040/fast"]
+  ignore line: [gmake[1]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp']
+  ignore line: [/bin/gmake -f CMakeFiles/cmTryCompileExec910547040.dir/build.make CMakeFiles/cmTryCompileExec910547040.dir/build]
+  ignore line: [gmake[2]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp']
+  ignore line: [/usr/bin/cmake -E cmake_progress_report /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/CMakeFiles 1]
+  ignore line: [Building C object CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc    -o CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [Linking C executable cmTryCompileExec910547040]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec910547040.dir/link.txt --verbose=1]
+  ignore line: [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc     -v CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o  -o cmTryCompileExec910547040 -rdynamic  ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/cc]
+  ignore line: [COLLECT_LTO_WRAPPER=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper]
+  ignore line: [Target: x86_64-unknown-linux-gnu]
+  ignore line: [Configured with: ../gcc/configure --prefix=/jenkins/workspace/build-any-ib/sw/20156248/1/INSTALLROOT/9e762b1877ff3034791123efa3be572fdf9f4577/slc6_x86-64/GCC-Toolchain/v7.3.0-alice2-13 --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --enable-languages=c,c++,fortran --disable-multilib --enable-ld=default --enable-lto --disable-nls]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 7.3.0 (GCC) ]
+  ignore line: [COMPILER_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec910547040' '-rdynamic' '-mtune=generic' '-march=x86-64']
+  link line: [ /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/collect2 -plugin /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/liblto_plugin.so -plugin-opt=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccGGcZXD.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec910547040 /lib/../lib64/crt1.o /lib/../lib64/crti.o /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtbegin.o -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../.. CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtend.o /lib/../lib64/crtn.o]
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccGGcZXD.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTryCompileExec910547040] ==> ignore
+    arg [/lib/../lib64/crt1.o] ==> ignore
+    arg [/lib/../lib64/crti.o] ==> ignore
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtbegin.o] ==> ignore
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../..] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../..]
+    arg [CMakeFiles/cmTryCompileExec910547040.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [-lc] ==> lib [c]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtend.o] ==> ignore
+    arg [/lib/../lib64/crtn.o] ==> ignore
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc/x86_64-unknown-linux-gnu/7.3.0]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/x86_64-unknown-linux-gnu/lib]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../..] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib]
+  implicit libs: [c]
+  implicit dirs: [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc/x86_64-unknown-linux-gnu/7.3.0;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib64;/lib64;/usr/lib64;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/x86_64-unknown-linux-gnu/lib;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib]
+  implicit fwks: []
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/bin/gmake "cmTryCompileExec2659273821/fast"
+gmake[1]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/bin/gmake -f CMakeFiles/cmTryCompileExec2659273821.dir/build.make CMakeFiles/cmTryCompileExec2659273821.dir/build
+gmake[2]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec2659273821.dir/testCXXCompiler.cxx.o
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++     -o CMakeFiles/cmTryCompileExec2659273821.dir/testCXXCompiler.cxx.o -c /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTryCompileExec2659273821
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2659273821.dir/link.txt --verbose=1
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++        CMakeFiles/cmTryCompileExec2659273821.dir/testCXXCompiler.cxx.o  -o cmTryCompileExec2659273821 -rdynamic 
+gmake[2]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/bin/gmake "cmTryCompileExec4010782470/fast"
+gmake[1]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/bin/gmake -f CMakeFiles/cmTryCompileExec4010782470.dir/build.make CMakeFiles/cmTryCompileExec4010782470.dir/build
+gmake[2]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++     -o CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+Linking CXX executable cmTryCompileExec4010782470
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec4010782470.dir/link.txt --verbose=1
+/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++      -v CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o  -o cmTryCompileExec4010782470 -rdynamic  
+Using built-in specs.
+COLLECT_GCC=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++
+COLLECT_LTO_WRAPPER=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: ../gcc/configure --prefix=/jenkins/workspace/build-any-ib/sw/20156248/1/INSTALLROOT/9e762b1877ff3034791123efa3be572fdf9f4577/slc6_x86-64/GCC-Toolchain/v7.3.0-alice2-13 --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --enable-languages=c,c++,fortran --disable-multilib --enable-ld=default --enable-lto --disable-nls
+Thread model: posix
+gcc version 7.3.0 (GCC) 
+COMPILER_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/bin/
+LIBRARY_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec4010782470' '-rdynamic' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/collect2 -plugin /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/liblto_plugin.so -plugin-opt=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccwvCsY5.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec4010782470 /lib/../lib64/crt1.o /lib/../lib64/crti.o /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtbegin.o -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../.. CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtend.o /lib/../lib64/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec4010782470' '-rdynamic' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+gmake[2]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp'
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:/bin/gmake "cmTryCompileExec4010782470/fast"]
+  ignore line: [gmake[1]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp']
+  ignore line: [/bin/gmake -f CMakeFiles/cmTryCompileExec4010782470.dir/build.make CMakeFiles/cmTryCompileExec4010782470.dir/build]
+  ignore line: [gmake[2]: Entering directory `/data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp']
+  ignore line: [/usr/bin/cmake -E cmake_progress_report /data/alice/jlomker/EbE_AVFD_1p2-LHC/AVFD_Node/Heavy-ion_EM_fields/build/CMakeFiles/CMakeTmp/CMakeFiles 1]
+  ignore line: [Building CXX object CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++     -o CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Linking CXX executable cmTryCompileExec4010782470]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec4010782470.dir/link.txt --verbose=1]
+  ignore line: [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++      -v CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o  -o cmTryCompileExec4010782470 -rdynamic  ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/c++]
+  ignore line: [COLLECT_LTO_WRAPPER=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper]
+  ignore line: [Target: x86_64-unknown-linux-gnu]
+  ignore line: [Configured with: ../gcc/configure --prefix=/jenkins/workspace/build-any-ib/sw/20156248/1/INSTALLROOT/9e762b1877ff3034791123efa3be572fdf9f4577/slc6_x86-64/GCC-Toolchain/v7.3.0-alice2-13 --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --enable-languages=c,c++,fortran --disable-multilib --enable-ld=default --enable-lto --disable-nls]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 7.3.0 (GCC) ]
+  ignore line: [COMPILER_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib/:/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec4010782470' '-rdynamic' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  link line: [ /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/collect2 -plugin /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/liblto_plugin.so -plugin-opt=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper -plugin-opt=-fresolution=/tmp/ccwvCsY5.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec4010782470 /lib/../lib64/crt1.o /lib/../lib64/crti.o /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtbegin.o -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib -L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../.. CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtend.o /lib/../lib64/crtn.o]
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../libexec/gcc/x86_64-unknown-linux-gnu/7.3.0/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccwvCsY5.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTryCompileExec4010782470] ==> ignore
+    arg [/lib/../lib64/crt1.o] ==> ignore
+    arg [/lib/../lib64/crti.o] ==> ignore
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtbegin.o] ==> ignore
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib]
+    arg [-L/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../..] ==> dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../..]
+    arg [CMakeFiles/cmTryCompileExec4010782470.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-lstdc++] ==> lib [stdc++]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/crtend.o] ==> ignore
+    arg [/lib/../lib64/crtn.o] ==> ignore
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc/x86_64-unknown-linux-gnu/7.3.0]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../lib64] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../../../x86_64-unknown-linux-gnu/lib] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/x86_64-unknown-linux-gnu/lib]
+  collapse library dir [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/bin/../lib/gcc/x86_64-unknown-linux-gnu/7.3.0/../../..] ==> [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib]
+  implicit libs: [stdc++;m;c]
+  implicit dirs: [/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc/x86_64-unknown-linux-gnu/7.3.0;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib/gcc;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib64;/lib64;/usr/lib64;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/x86_64-unknown-linux-gnu/lib;/cvmfs/alice.cern.ch/el6-x86_64/Packages/GCC-Toolchain/v7.3.0-alice2-13/lib]
+  implicit fwks: []
+
+
