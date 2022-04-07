@@ -2,7 +2,7 @@ class MagneticFieldGenerator
 {
 private:
 	int Np = 82;//79;				// Np : total number of protons
-	int NN = 126;//197;				// NN : total number of nucleons
+	int NN = 208;//197;				// NN : total number of nucleons
 	double sigma = 0.71;		// sigma (fm): ElectroMagneto Radius of Proton
 	double gamma = 106.3;		// gamma : Lorentz gamma factor, gamma = sqrt(s_NN)/m_N/2
 	double RQGPsq = 10.0;		// only for statistic purpose, B field averaged over a region with x^2 + y^2 <= RQGPsq (fm^2)

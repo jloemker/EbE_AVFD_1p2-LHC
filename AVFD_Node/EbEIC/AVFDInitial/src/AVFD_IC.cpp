@@ -6,9 +6,9 @@
 int main(int argc, char* argv[])
 {
 	int Nmax = 1;
-	int AProjTarg = 197;
-	int ZProjTarg = 79;
-	double sqrt_sNN = 200;
+	int AProjTarg = 208;
+	int ZProjTarg = 82;
+	double sqrt_sNN = 5200;
 	stringstream n_ss, a_ss, z_ss, s_ss;
 	n_ss << argv[1];
 	n_ss >> Nmax;
