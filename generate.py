@@ -5,12 +5,12 @@ EbEAVFD_Parameters = {
     'Job Number'                :   '1000',
     'Hydro Events Per Job'      :   '1',
     'Hadronization Events'      :   '50',
-    'Centrality'                :   '20-30%',
+    'Centrality'                :   '30-40%',
     'LCC Ratio'                 :   '0%'   ,
     'Axial Charge Ratio'        :   '0.0'   ,
     'Bfield Life Time'          :   '0.2'   ,
 }
-from os import path, getcwd, remove, makedirs
+from os import path, getcwd, remove, makedirs, system, chdir
 from shutil import move, copy, rmtree, copytree
 import numpy as np
 
@@ -149,7 +149,10 @@ comfile = open('./PlayGround/commands.txt','w+')
 RUNRAWFile = open('./AVFD_Node/ControlFiles/run_RAW.sh','r')
 all_lines = RUNRAWFile.readlines()
 for i in range(1,int(JobNumber)+1):
-    copytree("./PlayGround/SRC","./PlayGround/job-%d"%i)
+    makedirs("./PlayGround/job-%d" % i)
+    chdir("./PlayGround/job-%d" % i)
+    system("lndir ../SRC .")
+    chdir ("../..")
     comfile.write("bash %s/job-%d/run.sh; mv %s/job-%d/Result /data/alice/jlomker/EbE_AVFD_1p2-LHC/Result/job-%d\n" 
         %(WorkingDirectory, i, WorkingDirectory, i, i))
     RUNFile = open('./PlayGround/job-%d/run.sh' %i,'w+')

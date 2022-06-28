@@ -5,7 +5,7 @@ EbEAVFD_Parameters = {
 	'Job Number'				:	'1000',
 	'Hydro Events Per Job'		:	'1',
 	'Hadronization Events'		: 	'50',
-	'Centrality'				:   '20-30%',
+	'Centrality'				:   '30-40%',
 	'LCC Ratio'					:	'0.0%'	,
 	'Axial Charge Ratio' 		:	'0.0'	,
     'Bfield Life Time'          :   '0.2'   ,
